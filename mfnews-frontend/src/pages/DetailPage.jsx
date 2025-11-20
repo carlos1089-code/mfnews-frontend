@@ -6,133 +6,124 @@ import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import newsApi from '../api/newsApi';
 import { Navbar } from '../components/Navbar';
+import { NewsModal } from '../components/NewsModal'; // <--- IMPORTANTE
 
 export const DetailPage = () => {
-  const { id } = useParams(); // 1. Capturamos el ID de la URL
+  const { id } = useParams();
   const navigate = useNavigate();
   
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estado para controlar el modal de edición
+  const [openModal, setOpenModal] = useState(false); 
 
-  // Cargar la noticia al entrar
+  // Función para cargar datos
+  const loadNews = async () => {
+    try {
+      const response = await newsApi.get(`/${id}`);
+      setNews(response.data);
+    } catch (err) {
+      setError("No se pudo cargar la noticia.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadNews = async () => {
-      try {
-        const response = await newsApi.get(`/${id}`);
-        setNews(response.data);
-      } catch (err) {
-        console.error(err);
-        setError("No se pudo cargar la noticia. Puede que no exista o el servidor falló.");
-      } finally {
-        setLoading(false);
-      }
-    };
     loadNews();
   }, [id]);
 
-  // Manejar eliminación (Bonus: Funcionalidad real)
+  // ELIMINAR (DELETE)
   const handleDelete = async () => {
-    // Usamos un confirm nativo por ahora (luego podemos hacerlo modal)
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.')) {
+    if (window.confirm('¿Seguro que quieres eliminar?')) {
       try {
         await newsApi.delete(`/${id}`);
-        navigate('/'); // Volvemos al home tras borrar
+        navigate('/');
       } catch (err) {
-        alert("Error al eliminar la noticia");
+        alert("Error al eliminar");
       }
     }
   };
 
-  if (loading) {
-    return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-            <CircularProgress />
-        </Box>
-    );
-  }
+  // EDITAR (PUT) - Esta función se la pasamos al Modal
+  const handleEdit = async (values) => {
+    try {
+      // Enviamos los datos actualizados al backend
+      await newsApi.put(`/${id}`, values);
+      // Recargamos los datos locales para ver el cambio en pantalla
+      await loadNews(); 
+      alert("Noticia actualizada correctamente");
+      setOpenModal(false); // Cerramos modal
+    } catch (error) {
+      alert("Error al actualizar la noticia");
+      console.error(error);
+    }
+  };
 
-  if (error || !news) {
-    return (
-        <Container sx={{ mt: 4 }}>
-            <Alert severity="error">{error}</Alert>
-            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')} sx={{ mt: 2 }}>
-                Volver al inicio
-            </Button>
-        </Container>
-    );
-  }
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+  if (error || !news) return <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>;
 
   return (
     <>
       <Navbar />
       
       <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
-        
-        {/* 1. BOTONERA SUPERIOR (Navegación y Acciones) */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>
-                Volver
-            </Button>
+            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>Volver</Button>
 
             <Stack direction="row" spacing={2}>
+                {/* Botón que abre el modal */}
                 <Button 
                     variant="outlined" 
                     startIcon={<EditIcon />}
-                    onClick={() => alert("Próximamente: Editar")} // Lo haremos en el siguiente paso
+                    onClick={() => setOpenModal(true)} 
                 >
                     Editar
                 </Button>
-                <Button 
-                    variant="contained" 
-                    color="error" 
-                    startIcon={<DeleteIcon />}
-                    onClick={handleDelete}
-                >
+                <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={handleDelete}>
                     Eliminar
                 </Button>
             </Stack>
         </Box>
 
-        {/* 2. CONTENIDO DE LA NOTICIA */}
         <article>
-            {/* Categoría / Autor / Fecha */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                 <Chip label={news.author} color="primary" size="small" />
                 <Typography variant="caption" color="text.secondary">
-                    {new Date(news.date).toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    {new Date(news.date).toLocaleDateString()}
                 </Typography>
             </Stack>
-
-            {/* Título */}
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2, lineHeight: 1.2 }}>
-                {news.title}
-            </Typography>
-
-            {/* Imagen Principal */}
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>{news.title}</Typography>
+            
+            {/* Imagen con manejo de error por si la URL está rota */}
             <Box 
                 component="img"
-                src={news.image_url}
+                src={news.image_url || "https://via.placeholder.com/800"}
                 alt={news.title}
-                sx={{ 
-                    width: '100%', 
-                    height: { xs: '250px', md: '450px' }, // Responsive
-                    objectFit: 'cover', 
-                    borderRadius: 2,
-                    mb: 4,
-                    boxShadow: 3
-                }}
+                sx={{ width: '100%', height: { xs: '250px', md: '450px' }, objectFit: 'cover', borderRadius: 2, mb: 4 }}
             />
-
-            {/* Cuerpo del texto */}
-            <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#333' }}>
-                {news.body}
-            </Typography>
+            
+            <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8 }}>{news.body}</Typography>
         </article>
 
         <Divider sx={{ my: 4 }} />
-        
       </Container>
+
+      {/* MODAL DE EDICIÓN */}
+      {/* Le pasamos "news" como initialValues para que el formulario venga lleno */}
+      <NewsModal 
+        open={openModal}
+        handleClose={() => setOpenModal(false)}
+        onSubmit={handleEdit}
+        initialValues={{
+            title: news.title,
+            author: news.author,
+            image_url: news.image_url,
+            body: news.body
+        }}
+      />
     </>
   );
 };
