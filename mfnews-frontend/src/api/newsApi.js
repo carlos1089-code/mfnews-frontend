@@ -24,5 +24,4 @@ Es como un middleware :)
 
 */
 
-
 export default newsApi;
