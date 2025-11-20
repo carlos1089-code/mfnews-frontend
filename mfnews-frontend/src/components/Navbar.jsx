@@ -1,23 +1,37 @@
 import { useState } from 'react';
 import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { NewsModal } from './NewsModal'; // Importamos el modal
-import newsApi from '../api/newsApi'; // Importamos la API
+import { NewsModal } from './NewsModal';
+import newsApi from '../api/newsApi';
 
 export const Navbar = () => {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false); // Estado para abrir/cerrar modal
+  const [open, setOpen] = useState(false);
+  
+  // NUEVO ESTADO: Controla si estamos esperando a la API
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Lógica para CREAR noticia (POST)
-  const handleCreateNews = async (values) => {
+  const handleCreateNews = async (values, resetForm) => {
+    setIsCreating(true); // 1. Prende el spinner
     try {
-      await newsApi.post('/', values);
-      alert('Noticia creada con éxito!');
-      // Recargar la página para ver la nueva noticia (o usar contexto para ser más pro)
+      // Truco para Demo: Esperar 1 segundo artificialmente para que SE VEA el spinner
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await newsApi.post('/', values); // 2. Petición real al backend
+      
+      // 3. Éxito
+      resetForm(); 
+      setOpen(false); 
+      
+      // En lugar de alert, recargamos directo.
+      // El usuario verá el spinner girar, el modal cerrarse y la página actualizarse.
       window.location.reload(); 
+      
     } catch (error) {
       console.error(error);
-      alert('Error al crear la noticia');
+      alert('Hubo un error al crear la noticia'); // Este alert sí dejalo por si falla
+    } finally {
+      setIsCreating(false); // Apaga el spinner
     }
   };
 
@@ -27,8 +41,7 @@ export const Navbar = () => {
         <Container maxWidth="lg">
           <Toolbar disableGutters>
             <Typography
-              variant="h6"
-              component="div"
+              variant="h6" component="div"
               sx={{ flexGrow: 1, fontWeight: 'bold', cursor: 'pointer' }}
               onClick={() => navigate('/')}
             >
@@ -36,7 +49,6 @@ export const Navbar = () => {
             </Typography>
 
             <Box>
-              {/* Al hacer click, ponemos setOpen(true) */}
               <Button 
                   variant="contained" 
                   sx={{ color: '#D32F2F', bgcolor: 'white', fontWeight: 'bold', '&:hover': { bgcolor: '#ffebee' }}}
@@ -49,12 +61,12 @@ export const Navbar = () => {
         </Container>
       </AppBar>
 
-      {/* El Modal vive aquí, pero está oculto hasta que open=true */}
       <NewsModal 
         open={open} 
         handleClose={() => setOpen(false)} 
         onSubmit={handleCreateNews} 
-        initialValues={null} // Null significa "Crear" (formulario vacío)
+        initialValues={null}
+        isLoading={isCreating} // <--- 3. Pasamos el estado al modal
       />
     </>
   );
