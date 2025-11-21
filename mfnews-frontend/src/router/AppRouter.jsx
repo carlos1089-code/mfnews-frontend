@@ -3,22 +3,33 @@ import { HomePage } from '../pages/HomePage';
 import { DetailPage } from '../pages/DetailPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
+import { PrivateRoute } from '../components/PrivateRoute'; // <--- 1. IMPORTAR
 
 export const AppRouter = () => {
   return (
     <Routes>
-        {/* Ruta principal: Listado */}
-        <Route path="/" element={<HomePage />} />
+        {/* --- RUTAS PRIVADAS (Envueltas) --- */}
         
-        {/* Ruta detalle: Recibe un ID dinámico */}
-        <Route path="/news/:id" element={<DetailPage />} />
+        {/* Home solo para logueados */}
+        <Route path="/" element={
+            <PrivateRoute>
+                <HomePage />
+            </PrivateRoute>
+        } />
+        
+        {/* Detalle solo para logueados */}
+        <Route path="/news/:id" element={
+            <PrivateRoute>
+                <DetailPage />
+            </PrivateRoute>
+        } />
 
+        {/* --- RUTAS PÚBLICAS --- */}
         <Route path="/login" element={<LoginPage />} />
-           
         <Route path="/register" element={<RegisterPage />} />
         
-        {/* Comodín: Cualquier ruta rara te manda al inicio */}
-        <Route path="/*" element={<Navigate to="/" />} />
+        {/* Cualquier otra cosa -> Login */}
+        <Route path="/*" element={<Navigate to="/login" />} />
     </Routes>
   )
 }

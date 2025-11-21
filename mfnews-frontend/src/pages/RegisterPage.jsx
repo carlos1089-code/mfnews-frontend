@@ -23,12 +23,7 @@ export const RegisterPage = () => {
     setError(''); // Limpiar errores previos
 
     try {
-      // NOTA: newsApi tiene baseURL en /api/news, así que sobreescribimos la URL
-      // o llamamos a axios directo. Para ser prolijos, usemos newsApi con la ruta completa relativa al back
-      // Pero como tu newsApi apunta a /api/news, mejor hacemos un post a la ruta de auth manual:
-      
-      // Ajuste rápido: axios directo o configurar otra instancia. 
-      // Asumamos que el back corre en localhost:3000
+    
       const response = await newsApi.post('http://localhost:3000/api/auth/register', formData);
       
       // Guardamos sesión (Auto-login)
@@ -44,6 +39,7 @@ export const RegisterPage = () => {
       console.error(err);
       // Capturamos el mensaje de error del backend (ej: "Email ya existe")
       setError(err.response?.data?.error || 'Error al registrarse');
+      console.log(error)
     }
   };
 

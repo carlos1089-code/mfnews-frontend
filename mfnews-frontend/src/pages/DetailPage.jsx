@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import newsApi from '../api/newsApi';
 import { Navbar } from '../components/Navbar';
-import { NewsModal } from '../components/NewsModal'; // <--- IMPORTANTE
+import { NewsModal } from '../components/NewsModal';
 
 export const DetailPage = () => {
   const { id } = useParams();
@@ -15,11 +15,11 @@ export const DetailPage = () => {
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Estado para controlar el modal de edición
-  const [openModal, setOpenModal] = useState(false); 
+  const [openModal, setOpenModal] = useState(false);
 
-  // Función para cargar datos
+  // LEER EL ROL DEL USUARIO
+  const role = localStorage.getItem('role'); // "ADMIN" o "USER"
+
   const loadNews = async () => {
     try {
       const response = await newsApi.get(`/${id}`);
@@ -35,30 +35,25 @@ export const DetailPage = () => {
     loadNews();
   }, [id]);
 
-  // ELIMINAR (DELETE)
   const handleDelete = async () => {
     if (window.confirm('¿Seguro que quieres eliminar?')) {
       try {
         await newsApi.delete(`/${id}`);
         navigate('/');
       } catch (err) {
-        alert("Error al eliminar");
+        alert("Error: No tienes permiso o falló el servidor");
       }
     }
   };
 
-  // EDITAR (PUT) - Esta función se la pasamos al Modal
   const handleEdit = async (values) => {
     try {
-      // Enviamos los datos actualizados al backend
       await newsApi.put(`/${id}`, values);
-      // Recargamos los datos locales para ver el cambio en pantalla
-      await loadNews(); 
+      await loadNews();
       alert("Noticia actualizada correctamente");
-      setOpenModal(false); // Cerramos modal
+      setOpenModal(false);
     } catch (error) {
       alert("Error al actualizar la noticia");
-      console.error(error);
     }
   };
 
@@ -73,19 +68,26 @@ export const DetailPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>Volver</Button>
 
-            <Stack direction="row" spacing={2}>
-                {/* Botón que abre el modal */}
-                <Button 
-                    variant="outlined" 
-                    startIcon={<EditIcon />}
-                    onClick={() => setOpenModal(true)} 
-                >
-                    Editar
-                </Button>
-                <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={handleDelete}>
-                    Eliminar
-                </Button>
-            </Stack>
+            {/* 🔒 PROTECCIÓN VISUAL: Solo renderizamos si es ADMIN */}
+            {role === 'ADMIN' && (
+                <Stack direction="row" spacing={2}>
+                    <Button 
+                        variant="outlined" 
+                        startIcon={<EditIcon />}
+                        onClick={() => setOpenModal(true)} 
+                    >
+                        Editar
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        color="error" 
+                        startIcon={<DeleteIcon />} 
+                        onClick={handleDelete}
+                    >
+                        Eliminar
+                    </Button>
+                </Stack>
+            )}
         </Box>
 
         <article>
@@ -97,7 +99,6 @@ export const DetailPage = () => {
             </Stack>
             <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>{news.title}</Typography>
             
-            {/* Imagen con manejo de error por si la URL está rota */}
             <Box 
                 component="img"
                 src={news.image_url || "https://via.placeholder.com/800"}
@@ -111,19 +112,20 @@ export const DetailPage = () => {
         <Divider sx={{ my: 4 }} />
       </Container>
 
-      {/* MODAL DE EDICIÓN */}
-      {/* Le pasamos "news" como initialValues para que el formulario venga lleno */}
-      <NewsModal 
-        open={openModal}
-        handleClose={() => setOpenModal(false)}
-        onSubmit={handleEdit}
-        initialValues={{
-            title: news.title,
-            author: news.author,
-            image_url: news.image_url,
-            body: news.body
-        }}
-      />
+      {/* El modal también lo protegemos o simplemente no se abrirá porque no hay botón */}
+      {role === 'ADMIN' && (
+          <NewsModal 
+            open={openModal}
+            handleClose={() => setOpenModal(false)}
+            onSubmit={handleEdit}
+            initialValues={{
+                title: news.title,
+                author: news.author,
+                image_url: news.image_url,
+                body: news.body
+            }}
+          />
+      )}
     </>
   );
 };
