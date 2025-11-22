@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Container, TextField, Button, Typography, Box, Alert, Link } from '@mui/material';
+import { TextField, Button, Alert, Box, Typography, Link } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import newsApi from '../api/newsApi'; 
+import newsApi from '../api/newsApi'; // Usamos la instancia configurada
 import { AuthLayout } from '../layout/AuthLayout';
+import { useAuth } from '../Context/AuthContext'; // 👈 Importamos el Hook
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // 👈 Usamos 'login' para auto-loguear al registrarse
   
-  // Estado del formulario
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,26 +22,29 @@ export const RegisterPage = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError(''); // Limpiar errores previos
+    setError('');
 
     try {
-    
-      const response = await newsApi.post('http://localhost:3000/api/auth/register', formData);
+      // Nota: Ajusta la ruta si tu backend usa /auth/register
+      // Si newsApi ya tiene la base URL, solo pon la ruta relativa.
+      const response = await newsApi.post('/auth/register', formData);
       
-      // Guardamos sesión (Auto-login)
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.user.role);
-      localStorage.setItem('name', response.data.user.name);
+      // 👇 AUTO-LOGIN:
+      // Si el registro devuelve el usuario y token, iniciamos sesión directamente.
+      // Si tu backend solo devuelve "OK", entonces redirige al login: navigate('/login')
+      if (response.data.token && response.data.user) {
+          login(response.data.user, response.data.token);
+          alert(`¡Bienvenido ${response.data.user.name}!`);
+          navigate('/'); 
+      } else {
+          // Caso alternativo si el backend no devuelve token al registrar
+          alert('Registro exitoso. Por favor inicia sesión.');
+          navigate('/login');
+      }
 
-      alert(`¡Bienvenido ${response.data.user.name}! Tu rol es: ${response.data.user.role}`);
-      
-      navigate('/'); // Redirigir al Home
-      window.location.reload();
     } catch (err) {
       console.error(err);
-      // Capturamos el mensaje de error del backend (ej: "Email ya existe")
-      setError(err.response?.data?.error || 'Error al registrarse');
-      console.log(error)
+      setError(err.response?.data?.error || 'Error al registrarse. Verifica los datos.');
     }
   };
 
@@ -85,7 +89,7 @@ export const RegisterPage = () => {
                 Registrarse
             </Button>
 
-            <Box sx={{ textAlign: 'center', mt: 1 }}>
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Typography variant="body2">
                     ¿Ya tienes cuenta?{' '}
                     <Link component={RouterLink} to="/login" underline="hover">
