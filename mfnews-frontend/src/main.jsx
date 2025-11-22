@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <CssBaseline />
-      <AppRouter /> {/* <--- Esto es lo que carga tu HomePage */}
+      <AppRouter /> 
     </BrowserRouter>
   </React.StrictMode>,
 )
