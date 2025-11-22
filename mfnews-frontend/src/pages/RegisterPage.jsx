@@ -1,13 +1,13 @@
+// src/pages/RegisterPage.jsx
 import { useState } from 'react';
 import { TextField, Button, Alert, Box, Typography, Link } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import newsApi from '../api/newsApi'; // Usamos la instancia configurada
 import { AuthLayout } from '../layout/AuthLayout';
 import { useAuth } from '../Context/AuthContext'; // 👈 Importamos el Hook
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // 👈 Usamos 'login' para auto-loguear al registrarse
+  const { signUp } = useAuth(); // 👈 Usamos la nueva función del contexto
   
   const [formData, setFormData] = useState({
     name: '',
@@ -15,6 +15,7 @@ export const RegisterPage = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Estado de carga local
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,28 +24,19 @@ export const RegisterPage = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    try {
-      // Nota: Ajusta la ruta si tu backend usa /auth/register
-      // Si newsApi ya tiene la base URL, solo pon la ruta relativa.
-      const response = await newsApi.post('/auth/register', formData);
-      
-      // 👇 AUTO-LOGIN:
-      // Si el registro devuelve el usuario y token, iniciamos sesión directamente.
-      // Si tu backend solo devuelve "OK", entonces redirige al login: navigate('/login')
-      if (response.data.token && response.data.user) {
-          login(response.data.user, response.data.token);
-          alert(`¡Bienvenido ${response.data.user.name}!`);
-          navigate('/'); 
-      } else {
-          // Caso alternativo si el backend no devuelve token al registrar
-          alert('Registro exitoso. Por favor inicia sesión.');
-          navigate('/login');
-      }
+    // 👇 Lógica limpia: Delegamos al contexto
+    const result = await signUp(formData.name, formData.email, formData.password);
+    
+    setLoading(false);
 
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Error al registrarse. Verifica los datos.');
+    if (result.success) {
+      // Si hubo auto-login en el context, al ir al Home ya estaremos logueados
+      alert('¡Cuenta creada con éxito!'); 
+      navigate('/'); 
+    } else {
+      setError(result.error);
     }
   };
 
@@ -85,8 +77,15 @@ export const RegisterPage = () => {
                 onChange={handleChange} 
             />
 
-            <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 1 }}>
-                Registrarse
+            <Button 
+                type="submit" 
+                variant="contained" 
+                size="large" 
+                fullWidth 
+                disabled={loading} // Feedback visual
+                sx={{ mt: 1 }}
+            >
+                {loading ? 'Creando cuenta...' : 'Registrarse'}
             </Button>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>

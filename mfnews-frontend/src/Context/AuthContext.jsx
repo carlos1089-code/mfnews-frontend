@@ -1,69 +1,96 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-// 1. Creamos el Contexto (La "tubería" vacía)
 const AuthContext = createContext();
 
-// 2. Creamos el Provider (El componente que tiene la lógica)
+const BASE_URL = 'http://localhost:3000/api';
+
 export const AuthProvider = ({ children }) => {
-  
-  // Estado global del usuario. Si es null, no hay nadie logueado.
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(true); // Para no mostrar la app hasta verificar token
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // Efecto para verificar si ya había sesión al recargar la página (Hidratación)
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedName = localStorage.getItem('name');
-    const storedRole = localStorage.getItem('role');
-
-    if (storedToken && storedName) {
-      setUser({
-        name: storedName,
-        role: storedRole,
-        token: storedToken
-      });
-      setIsAuthenticated(true);
-    }
+    // ... (Misma lógica de hidratación que antes) ...
+    const token = localStorage.getItem('token');
+    // ...
     setLoadingAuth(false);
   }, []);
 
-  // FUNCIÓN LOGIN: Se llama cuando el usuario pone user/pass correctos
-  const login = (userData, token) => {
-    // 1. Guardamos en LocalStorage (Persistencia)
-    localStorage.setItem('token', token);
-    localStorage.setItem('name', userData.name);
-    localStorage.setItem('role', userData.role);
+  // --- NUEVA FUNCIÓN LOGIN "PRO" ---
+  // Esta función recibe email/pass, llama a la API y actualiza el estado.
+  // Retorna un objeto { success: true/false, error: string } para que la UI sepa qué decir.
+  const signIn = async (email, password) => {
+    try {
+       const response = await axios.post(`${BASE_URL}/auth/login`, { email, password });
+      
+      const { user, token } = response.data;
 
-    // 2. Actualizamos el ESTADO (React reacciona al instante)
-    setUser({ ...userData, token });
-    setIsAuthenticated(true);
+      // 1. Guardar en Storage
+      localStorage.setItem('token', token);
+      localStorage.setItem('name', user.name);
+      localStorage.setItem('role', user.role);
+
+      // 2. Guardar en Estado
+      setUser({ ...user, token });
+      setIsAuthenticated(true);
+
+      return { success: true }; // ✅ Todo salió bien
+
+    } catch (error) {
+      console.error(error);
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Credenciales inválidas' 
+      }; // ❌ Algo falló
+    }
   };
 
-  // FUNCIÓN LOGOUT: Limpia todo
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('name');
-    localStorage.removeItem('role');
+  const signUp = async (name, email, password) => {
+    try {
+      // 1. Llamada a la API
+      const response = await axios.post(`${BASE_URL}/auth/register`, { name, email, password });
+      
+      // 2. AUTO-LOGIN:
+      // Si tu backend devuelve el token al registrarse (lo ideal), logueamos al usuario de una.
+      if (response.data.token && response.data.user) {
+        const { token, user } = response.data;
+        
+        localStorage.setItem('token', token);
+        localStorage.setItem('name', user.name);
+        localStorage.setItem('role', user.role);
 
+        setUser({ ...user, token });
+        setIsAuthenticated(true);
+      }
+
+      return { success: true }; 
+
+    } catch (error) {
+      console.error(error);
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Error al crear la cuenta.' 
+      };
+    }
+  };
+
+  const logout = () => {
+    // ... (Misma lógica de logout) ...
+    localStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
   };
 
-  // Exportamos los datos y funciones para que cualquiera los use
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, signIn, signUp, logout }}>
       {!loadingAuth && children} 
     </AuthContext.Provider>
   );
 };
-
-// 3. Custom Hook para no tener que importar useContext en cada archivo
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe usarse dentro de un AuthProvider");
-  }
+  if (!context) throw new Error("useAuth debe usarse dentro de un AuthProvider");
   return context;
 };

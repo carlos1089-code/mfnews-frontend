@@ -1,46 +1,37 @@
+// src/pages/LoginPage.jsx
 import { useState } from 'react';
 import { TextField, Button, Alert, Box, Typography, Link } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import axios from 'axios'; // O tu newsApi si prefieres
 import { AuthLayout } from '../layout/AuthLayout';
-import { useAuth } from '../Context/AuthContext'; // 👈 Importamos el Hook del Contexto
+import { useAuth } from '../Context/AuthContext'; 
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth(); // 👈 Extraemos la función 'login' del contexto
+  const { signIn } = useAuth(); // 👈 Usamos la nueva función 'signIn'
   
-  const [credentials, setCredentials] = useState({
-    email: '',
-    password: ''
-  });
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Opcional: para deshabilitar el botón
 
   const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value
-    });
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    try {
-      // Ajusta la URL según tu backend (usamos axios directo si la ruta es distinta a /news)
-      const response = await axios.post('http://localhost:3000/api/auth/login', credentials);
-      
-      // 👇 AQUÍ ESTÁ EL CAMBIO CLAVE:
-      // En lugar de guardar en localStorage a mano, le pasamos los datos al Contexto.
-      // El Contexto se encarga de actualizar el estado global y guardar en storage.
-      login(response.data.user, response.data.token);
+    // 👇 LLAMADA LIMPIA
+    // La página le dice al contexto: "Intenta loguear a este tipo"
+    const result = await signIn(credentials.email, credentials.password);
 
-      // Redirigimos al Home. Como el estado cambió, la Navbar se actualiza sola.
-      navigate('/');
-      
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Email o contraseña incorrectos');
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/'); // Si salió bien, nos vamos
+    } else {
+      setError(result.error); // Si salió mal, mostramos el error que nos devolvió el Contexto
     }
   };
 
@@ -58,7 +49,6 @@ export const LoginPage = () => {
                 value={credentials.email} 
                 onChange={handleChange} 
             />
-
             <TextField 
                 label="Contraseña" 
                 name="password" 
@@ -74,9 +64,10 @@ export const LoginPage = () => {
                 variant="contained" 
                 size="large" 
                 fullWidth 
+                disabled={loading} // Evita doble click
                 sx={{ mt: 1 }}
             >
-                Ingresar
+                {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>
