@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Container, TextField, Button, Typography, Box, Alert, Link } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
+import { AuthLayout } from '../layout/AuthLayout';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -48,64 +49,42 @@ export const LoginPage = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 8 }}>
-      <Box 
-        component="form" 
-        onSubmit={handleLogin} 
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 2, 
-          p: 4, 
-          boxShadow: 3, 
-          borderRadius: 2, 
-          bgcolor: 'white' 
-        }}
-      >
-        <Typography variant="h4" align="center" color="primary" fontWeight="bold">
-          Iniciar Sesión
-        </Typography>
-
+    <AuthLayout title="Iniciar Sesión">
         {error && <Alert severity="error">{error}</Alert>}
 
-        <TextField 
-          label="Email" 
-          name="email" 
-          type="email" 
-          fullWidth 
-          required 
-          value={credentials.email} 
-          onChange={handleChange} 
-        />
+        <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+                label="Email"
+                name="email"
+                type="email"
+                fullWidth
+                required
+                value={credentials.email}
+                onChange={handleChange}
+            />
+            <TextField
+                label="Contraseña"
+                name="password"
+                type="password"
+                fullWidth
+                required
+                value={credentials.password}
+                onChange={handleChange}
+            />
 
-        <TextField 
-          label="Contraseña" 
-          name="password" 
-          type="password" 
-          fullWidth 
-          required 
-          value={credentials.password} 
-          onChange={handleChange} 
-        />
+            <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 1 }}>
+                Ingresar
+            </Button>
 
-        <Button 
-          type="submit" 
-          variant="contained" 
-          size="large" 
-          sx={{ mt: 1 }}
-        >
-          Ingresar
-        </Button>
-
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Typography variant="body2">
-            ¿No tienes cuenta?{' '}
-            <Link component={RouterLink} to="/register" underline="hover">
-              Regístrate aquí
-            </Link>
-          </Typography>
+            <Box sx={{ textAlign: 'center', mt: 1 }}>
+                <Typography variant="body2">
+                    ¿No tienes cuenta?{' '}
+                    <Link component={RouterLink} to="/register" underline="hover">
+                        Regístrate aquí
+                    </Link>
+                </Typography>
+            </Box>
         </Box>
-      </Box>
-    </Container>
+    </AuthLayout>
   );
 };
