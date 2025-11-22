@@ -2,11 +2,28 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, S
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-const validationSchema = Yup.object({
-  title: Yup.string().required('El título es obligatorio'),
-  author: Yup.string().required('El autor es obligatorio'),
-  image_url: Yup.string().url('Debe ser una URL válida').nullable(),
-  body: Yup.string().required('El contenido es obligatorio').min(10, 'Muy corto'),
+const validationSchema = Yup.object().shape({
+    title: Yup.string()
+        .trim()
+        .required('El título es obligatorio')
+        .max(100, 'El título no puede exceder los 100 caracteres'),
+    author: Yup.string()
+        .trim()
+        .required('El autor es obligatorio')
+        .max(50, 'El autor no puede exceder los 50 caracteres'),
+    image_url: Yup.string()
+        .trim()
+        .url('Debe ser una URL válida')
+        .nullable()
+        .matches(
+            /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/i,
+            'Debe ser una URL de imagen válida (png, jpg, jpeg, gif, webp)'
+        ),
+    body: Yup.string()
+        .trim()
+        .required('El contenido es obligatorio')
+        .min(10, 'El contenido debe tener al menos 10 caracteres')
+        .max(5000, 'El contenido no puede exceder los 5000 caracteres'),
 });
 
 // Agregamos "isLoading" a las props que recibe el componente
