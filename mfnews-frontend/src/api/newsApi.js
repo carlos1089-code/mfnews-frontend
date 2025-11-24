@@ -2,7 +2,7 @@ import axios from 'axios';
 
 //Aca nos conectamos al back end. Si cambia la URL, solo se modifica aca y listo
 const newsApi = axios.create({
-    baseURL: 'http://localhost:3000/api/news'
+    baseURL: 'http://localhost:3000/api'
 });
 
 

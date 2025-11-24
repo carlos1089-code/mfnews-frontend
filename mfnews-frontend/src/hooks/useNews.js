@@ -1,47 +1,48 @@
-// src/hooks/useNews.js
 import { useState, useEffect } from 'react';
 import newsApi from '../api/newsApi';
 
-export const useNews = () => {
-  const [newsList, setNewsList] = useState([]);
+// 1. Recibimos el searchTerm (por defecto vacío)
+export const useNews = (searchTerm = '') => {
+  const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
 
-  const fetchNews = async () => {
-    setLoading(true);
-    try {
-      const response = await newsApi.get('/');
-      setNewsList(response.data);
-      setError(false);
-    } catch (err) {
-      console.error(err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Se ejecuta al montar el hook
   useEffect(() => {
+    const fetchNews = async () => {
+      setLoading(true);
+      try {
+        // 2. Enviamos el parámetro 'search' a NestJS
+        // Axios lo convierte automáticamente en: /news?search=valor
+        const { data } = await newsApi.get('/news', {
+            params: { search: searchTerm }
+        });
+        
+        setNews(data);
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        setError('Error al cargar noticias');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchNews();
-  }, []);
+  }, [searchTerm]); // 3. Se ejecuta cada vez que cambia la búsqueda
 
+  // Lógica de separación (Hero / Grid)
+  const heroNews = news.length > 0 ? news[0] : null;
+  const sideNews = news.length > 0 ? news.slice(1, 4) : [];
+  const gridNews = news.length > 0 ? news.slice(4) : [];
 
-  const heroNews = newsList[0];
-  const sideNews = newsList.slice(1, 4);
-  const gridNews = newsList.slice(4);
-
-  // Retornamos todo lo que la vista necesita
-  return {
-
-    newsList,
-    heroNews,
-    sideNews,
-    gridNews,
-    // Estados
-    loading,
+  return { 
+    news, 
+    heroNews, 
+    sideNews, 
+    gridNews, 
+    loading, 
     error,
-    // Funciones (por si quieres agregar un botón de "Recargar")
-    refetch: fetchNews 
+    // Exportamos una función manual por si queremos recargar sin cambiar búsqueda
+    refetch: () => setNews([...news]) 
   };
 };
