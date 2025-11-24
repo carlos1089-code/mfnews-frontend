@@ -1,58 +1,93 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Stack, CircularProgress } from '@mui/material';
+import { useState } from 'react';
+import { 
+  Dialog, DialogTitle, DialogContent, DialogActions, 
+  Button, TextField, Stack, CircularProgress 
+} from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import newsApi from '../api/newsApi'; // Asegúrate que la ruta a tu API sea correcta
 
+// Esquema de validación (Corregido para ser más flexible con las imágenes)
 const validationSchema = Yup.object().shape({
     title: Yup.string()
         .trim()
         .required('El título es obligatorio')
-        .max(100, 'El título no puede exceder los 100 caracteres'),
+        .max(100, 'Máximo 100 caracteres'),
     author: Yup.string()
         .trim()
         .required('El autor es obligatorio')
-        .max(50, 'El autor no puede exceder los 50 caracteres'),
+        .max(50, 'Máximo 50 caracteres'),
     image_url: Yup.string()
         .trim()
-        .url('Debe ser una URL válida')
-        .nullable()
-        .matches(
-            /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/i,
-            'Debe ser una URL de imagen válida (png, jpg, jpeg, gif, webp)'
-        ),
+        .url('Debe ser una URL válida (http://...)') 
+        .nullable(),
     body: Yup.string()
         .trim()
         .required('El contenido es obligatorio')
-        .min(10, 'El contenido debe tener al menos 10 caracteres')
-        .max(5000, 'El contenido no puede exceder los 5000 caracteres'),
+        .min(10, 'Mínimo 10 caracteres')
+        .max(5000, 'Máximo 5000 caracteres'),
 });
 
-// Agregamos "isLoading" a las props que recibe el componente
-export const NewsModal = ({ open, handleClose, onSubmit, initialValues, isLoading }) => {
-  
+export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const formik = useFormik({
-    initialValues: initialValues || { title: '', author: '', image_url: '', body: '' },
-    enableReinitialize: true,
+    // Si llegan initialValues (edición) los usa, si no, empieza vacío (creación)
+    initialValues: initialValues || { 
+        title: '', 
+        author: '', 
+        image_url: '', 
+        body: '' 
+    },
+    enableReinitialize: true, // Importante para cuando cargamos datos de edición
     validationSchema: validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      // Pasamos resetForm para que el padre decida cuándo limpiar
-      onSubmit(values, resetForm); 
+    
+    onSubmit: async (values, { resetForm }) => {
+      setIsLoading(true);
+      try {
+        if (initialValues?.id) {
+            // --- MODO EDICIÓN (PATCH) ---
+            await newsApi.patch(`//${initialValues.id}`, values);
+        } else {
+            // --- MODO CREACIÓN (POST) ---
+            await newsApi.post('/', values);
+        }
+
+        // Si todo sale bien:
+        resetForm();
+        handleClose();       // 1. Cerramos el modal
+        if (onSuccess) onSuccess(); // 2. Avisamos al padre (Navbar/Home) que refresque
+
+      } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Hubo un problema al guardar la noticia.');
+      } finally {
+        setIsLoading(false);
+      }
     },
   });
 
   return (
+    // Bloqueamos el cierre del modal si está cargando (!isLoading)
     <Dialog open={open} onClose={!isLoading ? handleClose : undefined} maxWidth="sm" fullWidth>
-      <DialogTitle>{initialValues ? 'Editar Noticia' : 'Nueva Noticia'}</DialogTitle>
+      <DialogTitle>
+        {initialValues ? 'Editar Noticia' : 'Nueva Noticia'}
+      </DialogTitle>
       
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
           <Stack spacing={2}>
+            
+            {/* TÍTULO */}
             <TextField
               fullWidth id="title" name="title" label="Título"
-              disabled={isLoading} // Bloqueamos inputs mientras carga
+              disabled={isLoading}
               value={formik.values.title} onChange={formik.handleChange}
               error={formik.touched.title && Boolean(formik.errors.title)}
               helperText={formik.touched.title && formik.errors.title}
             />
+
+            {/* AUTOR */}
             <TextField
               fullWidth id="author" name="author" label="Autor"
               disabled={isLoading}
@@ -60,13 +95,18 @@ export const NewsModal = ({ open, handleClose, onSubmit, initialValues, isLoadin
               error={formik.touched.author && Boolean(formik.errors.author)}
               helperText={formik.touched.author && formik.errors.author}
             />
+
+            {/* IMAGEN URL */}
             <TextField
-              fullWidth id="image_url" name="image_url" label="URL Imagen" placeholder="https://..."
+              fullWidth id="image_url" name="image_url" label="URL de Imagen"
+              placeholder="https://ejemplo.com/foto.jpg"
               disabled={isLoading}
               value={formik.values.image_url} onChange={formik.handleChange}
               error={formik.touched.image_url && Boolean(formik.errors.image_url)}
               helperText={formik.touched.image_url && formik.errors.image_url}
             />
+
+            {/* CONTENIDO (BODY) */}
             <TextField
               fullWidth multiline rows={4} id="body" name="body" label="Contenido"
               disabled={isLoading}
@@ -74,6 +114,7 @@ export const NewsModal = ({ open, handleClose, onSubmit, initialValues, isLoadin
               error={formik.touched.body && Boolean(formik.errors.body)}
               helperText={formik.touched.body && formik.errors.body}
             />
+
           </Stack>
         </DialogContent>
         
@@ -82,12 +123,10 @@ export const NewsModal = ({ open, handleClose, onSubmit, initialValues, isLoadin
             Cancelar
           </Button>
           
-          {/* BOTÓN CON SPINNER */}
           <Button 
             type="submit" 
             variant="contained" 
-            color="primary"
-            disabled={isLoading} // Evita doble click
+            disabled={isLoading}
             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
           >
             {isLoading ? 'Guardando...' : 'Guardar'}

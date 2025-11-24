@@ -6,55 +6,25 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import LogoutIcon from '@mui/icons-material/Logout';
 
-// Importamos nuestra API y Contexto
-import newsApi from '../api/newsApi';
+// Importamos solo el Contexto y el Componente del Modal
 import { useAuth } from '../Context/AuthContext';
 import { NewsModal } from './NewsModal';
 
 export const Navbar = () => {
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuth(); // 👈 MAGIA DEL CONTEXTO
+  const { user, logout, isAuthenticated } = useAuth();
   
-  // Estado local solo para manejar la visualización del modal
+  // Estado local SOLO para abrir/cerrar el modal
   const [openModal, setOpenModal] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   // Lógica para cerrar sesión
   const handleLogout = () => {
-    logout(); // 1. Limpia el estado global y localStorage
-    navigate('/login'); // 2. Redirige sin recargar la página
-  };
-
-  // Lógica para crear noticia (Solo Admins)
-  const handleCreateNews = async (values, resetForm) => {
-    setIsCreating(true);
-    try {
-      // Simulamos un pequeño delay para ver el spinner
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      await newsApi.post('/', values);
-      
-      resetForm();
-      setOpenModal(false);
-      
-      // OPCIONAL: Aquí podrías disparar una recarga de las noticias
-      // si usaras un Context de Noticias o React Query. 
-      // Por ahora, recargamos el home suavemente navegando:
-      navigate('/'); 
-      window.location.reload(); // Fallback temporal para refrescar la lista
-      
-    } catch (error) {
-      console.error(error);
-      alert('Error al crear la noticia');
-    } finally {
-      setIsCreating(false);
-    }
+    logout();
+    navigate('/login');
   };
 
   return (
     <>
-      {/* position="static" hace que fluya con la página. 
-          color="primary" usa el rojo definido en tu AppTheme. */}
       <AppBar position="static" color="primary" elevation={0}>
         <Container maxWidth="lg">
           <Toolbar disableGutters>
@@ -80,8 +50,8 @@ export const Navbar = () => {
                     <Button 
                         variant="contained" 
                         sx={{ 
-                          color: 'primary.main', // Texto rojo
-                          bgcolor: 'white',      // Fondo blanco
+                          color: 'primary.main',
+                          bgcolor: 'white',
                           fontWeight: 'bold', 
                           '&:hover': { bgcolor: '#ffebee' }
                         }}
@@ -141,14 +111,20 @@ export const Navbar = () => {
         </Container>
       </AppBar>
 
-      {/* MODAL DE CREACIÓN (Renderizado condicional) */}
+      {/* MODAL DE CREACIÓN
+          Ahora está limpio. Le pasamos onSuccess para decirle qué hacer 
+          cuando termine de guardar.
+      */}
       {isAuthenticated && user?.role === 'ADMIN' && (
         <NewsModal 
             open={openModal} 
             handleClose={() => setOpenModal(false)} 
-            onSubmit={handleCreateNews} 
-            initialValues={null}
-            isLoading={isCreating}
+            
+            // Cuando el modal termine de guardar, ejecuta esto:
+            onSuccess={() => {
+               setOpenModal(false); 
+               window.location.reload(); // Recarga para ver la noticia nueva
+            }}
         />
       )}
     </>
