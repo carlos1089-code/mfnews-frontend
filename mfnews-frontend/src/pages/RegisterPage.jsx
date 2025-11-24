@@ -4,6 +4,7 @@ import { TextField, Button, Alert, Box, Typography, Link } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { AuthLayout } from '../layout/AuthLayout';
 import { useAuth } from '../Context/AuthContext'; // 👈 Importamos el Hook
+import { toast } from 'sonner';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export const RegisterPage = () => {
 
     if (result.success) {
       // Si hubo auto-login en el context, al ir al Home ya estaremos logueados
-      alert('¡Cuenta creada con éxito!'); 
+      toast.success('¡Usuario creado con exito!');
       navigate('/'); 
     } else {
       setError(result.error);
