@@ -48,11 +48,11 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
       try {
         if (initialValues?.id) {
             // --- MODO EDICIÓN (PATCH) ---
-            await newsApi.patch(`//${initialValues.id}`, values);
+            await newsApi.patch(`/news/${initialValues.id}`, values);
             toast.success('¡Noticia actualizada correctamente!');
         } else {
             // --- MODO CREACIÓN (POST) ---
-            await newsApi.post('/', values);
+            await newsApi.post('/news', values);
             toast.success('¡Noticia creada con éxito!');
         }
 
