@@ -5,7 +5,8 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import newsApi from '../api/newsApi'; // Asegúrate que la ruta a tu API sea correcta
+import newsApi from '../api/newsApi'; 
+import {toast} from 'sonner';
 
 // Esquema de validación (Corregido para ser más flexible con las imágenes)
 const validationSchema = Yup.object().shape({
@@ -48,9 +49,11 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
         if (initialValues?.id) {
             // --- MODO EDICIÓN (PATCH) ---
             await newsApi.patch(`//${initialValues.id}`, values);
+            toast.success('¡Noticia actualizada correctamente!');
         } else {
             // --- MODO CREACIÓN (POST) ---
             await newsApi.post('/', values);
+            toast.success('¡Noticia creada con éxito!');
         }
 
         // Si todo sale bien:
@@ -60,7 +63,7 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
 
       } catch (error) {
         console.error('Error al guardar:', error);
-        alert('Hubo un problema al guardar la noticia.');
+        toast.error('Hubo un problema al guardar la noticia.');
       } finally {
         setIsLoading(false);
       }
