@@ -6,9 +6,9 @@ import {
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import newsApi from '../api/newsApi'; 
-import {toast} from 'sonner';
+import { toast } from 'sonner';
 
-// Esquema de validación (Corregido para ser más flexible con las imágenes)
+// Esquema de validación
 const validationSchema = Yup.object().shape({
     title: Yup.string()
         .trim()
@@ -40,30 +40,54 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
         image_url: '', 
         body: '' 
     },
-    enableReinitialize: true, // Importante para cuando cargamos datos de edición
+    enableReinitialize: true, // Importante: permite que el formulario se actualice si cambia la noticia seleccionada
     validationSchema: validationSchema,
     
     onSubmit: async (values, { resetForm }) => {
       setIsLoading(true);
+      
       try {
-        if (initialValues?.id) {
+        // 1. Detección Inteligente del ID
+        // Buscamos el ID en initialValues (forma correcta) o en values (respaldo) o _id (Mongo)
+        const idToEdit = initialValues?.id || values.id || initialValues?._id;
+
+        console.log("Procesando formulario. ID detectado:", idToEdit); 
+
+        // 2. Limpieza de Datos (Vital para evitar Error 400 en NestJS)
+        // Creamos un objeto que SOLO tenga los campos que el DTO del backend espera.
+        // Descartamos 'id', 'created_at', 'updated_at', etc.
+        const dataToSend = {
+            title: values.title,
+            author: values.author,
+            body: values.body,
+            image_url: values.image_url
+        };
+
+        if (idToEdit) {
             // --- MODO EDICIÓN (PATCH) ---
-            await newsApi.patch(`/news/${initialValues.id}`, values);
+            await newsApi.patch(`/news/${idToEdit}`, dataToSend);
             toast.success('¡Noticia actualizada correctamente!');
         } else {
             // --- MODO CREACIÓN (POST) ---
-            await newsApi.post('/news', values);
+            await newsApi.post('/news', dataToSend);
             toast.success('¡Noticia creada con éxito!');
         }
 
-        // Si todo sale bien:
+        // 3. Finalización Exitosa
         resetForm();
-        handleClose();       // 1. Cerramos el modal
-        if (onSuccess) onSuccess(); // 2. Avisamos al padre (Navbar/Home) que refresque
+        handleClose();
+        if (onSuccess) onSuccess(); 
 
       } catch (error) {
         console.error('Error al guardar:', error);
-        toast.error('Hubo un problema al guardar la noticia.');
+        
+        const serverMessage = error.response?.data?.message;
+        if (serverMessage) {
+            toast.error(Array.isArray(serverMessage) ? serverMessage[0] : serverMessage);
+        } else {
+            toast.error('Hubo un problema al guardar la noticia.');
+        }
+
       } finally {
         setIsLoading(false);
       }
@@ -71,10 +95,9 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
   });
 
   return (
-    // Bloqueamos el cierre del modal si está cargando (!isLoading)
     <Dialog open={open} onClose={!isLoading ? handleClose : undefined} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {initialValues ? 'Editar Noticia' : 'Nueva Noticia'}
+        {initialValues?.id ? 'Editar Noticia' : 'Nueva Noticia'}
       </DialogTitle>
       
       <form onSubmit={formik.handleSubmit}>

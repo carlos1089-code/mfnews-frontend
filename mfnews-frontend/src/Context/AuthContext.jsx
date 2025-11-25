@@ -4,23 +4,16 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-// Asegúrate que este puerto es donde corre tu NestJS
 const BASE_URL = 'http://localhost:3000/api';
 
 export const AuthProvider = ({ children }) => {
   
-  // -----------------------------------------------------------
-  // 1. ESTADO DEL USUARIO (Con "Lazy Initialization")
-  // -----------------------------------------------------------
-  // En lugar de iniciar en null, leemos el localStorage INMEDIATAMENTE.
-  // Así, cuando haces F5, React ya sabe quién eres antes de pintar nada.
   const [user, setUser] = useState(() => {
     try {
       const token = localStorage.getItem('token');
       const name = localStorage.getItem('name');
       const role = localStorage.getItem('role');
       
-      // Si hay token y datos básicos, reconstruimos el usuario
       if (token && name) {
         return { token, name, role };
       }
@@ -30,7 +23,7 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // Variable derivada: Si user existe es true, si es null es false.
+
   const isAuthenticated = !!user;
 
   // -----------------------------------------------------------
@@ -38,18 +31,14 @@ export const AuthProvider = ({ children }) => {
   // -----------------------------------------------------------
   const signIn = async (email, password) => {
     try {
+
       const response = await axios.post(`${BASE_URL}/auth/login`, { email, password });
-      
-      // Asumiendo que tu backend devuelve: { token: "...", user: { name: "...", role: "..." } }
-      // Ajusta esto si tu estructura es diferente (ej. response.data.accessToken)
       const { user, token } = response.data; 
 
-      // Guardamos en Disco (LocalStorage)
       localStorage.setItem('token', token);
       localStorage.setItem('name', user.name);
       localStorage.setItem('role', user.role);
 
-      // Guardamos en Memoria (Estado de React)
       setUser({ ...user, token });
 
       return { success: true }; 
@@ -70,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${BASE_URL}/auth/register`, { name, email, password });
       
-      // Si el backend loguea automáticamente al registrarse:
+
       if (response.data.token && response.data.user) {
         const { token, user } = response.data;
         
@@ -117,3 +106,7 @@ export const useAuth = () => {
   if (!context) throw new Error("useAuth debe usarse dentro de un AuthProvider");
   return context;
 };
+
+//! Es muy sencillo este contexto, basciamente te permite crear un contexto dentro del cual
+//! se crear funciones de login, registro y logout, luego cada hijo envuelto en este padre puede
+//! usar esas funciones y el estado del usuario logueado.

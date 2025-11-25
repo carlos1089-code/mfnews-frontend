@@ -7,6 +7,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import newsApi from '../api/newsApi';
 import { Navbar } from '../components/Navbar';
 import { NewsModal } from '../components/NewsModal';
+import { toast } from 'sonner'; // Opcional: Si usas sonner para notificaciones
 
 export const DetailPage = () => {
   const { id } = useParams();
@@ -20,9 +21,11 @@ export const DetailPage = () => {
   // LEER EL ROL DEL USUARIO
   const role = localStorage.getItem('role'); // "ADMIN" o "USER"
 
+  // Carga la noticia individual
   const loadNews = async () => {
     try {
-      const response = await newsApi.get(`/${id}`);
+
+      const response = await newsApi.get(`/news/${id}`);
       setNews(response.data);
     } catch (err) {
       setError("No se pudo cargar la noticia.");
@@ -36,24 +39,14 @@ export const DetailPage = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (window.confirm('¿Seguro que quieres eliminar?')) {
+    if (window.confirm('¿Seguro que quieres eliminar esta noticia?')) {
       try {
-        await newsApi.delete(`/${id}`);
+        await newsApi.delete(`/news/${id}`);
+        toast.success("Noticia eliminada"); 
         navigate('/');
       } catch (err) {
         alert("Error: No tienes permiso o falló el servidor");
       }
-    }
-  };
-
-  const handleEdit = async (values) => {
-    try {
-      await newsApi.put(`/${id}`, values);
-      await loadNews();
-      alert("Noticia actualizada correctamente");
-      setOpenModal(false);
-    } catch (error) {
-      alert("Error al actualizar la noticia");
     }
   };
 
@@ -68,7 +61,7 @@ export const DetailPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>Volver</Button>
 
-            {/* 🔒 PROTECCIÓN VISUAL: Solo renderizamos si es ADMIN */}
+        
             {role === 'ADMIN' && (
                 <Stack direction="row" spacing={2}>
                     <Button 
@@ -94,7 +87,7 @@ export const DetailPage = () => {
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                 <Chip label={news.author} color="primary" size="small" />
                 <Typography variant="caption" color="text.secondary">
-                    {new Date(news.date).toLocaleDateString()}
+                    {new Date(news.date || Date.now()).toLocaleDateString()}
                 </Typography>
             </Stack>
             <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>{news.title}</Typography>
@@ -106,23 +99,26 @@ export const DetailPage = () => {
                 sx={{ width: '100%', height: { xs: '250px', md: '450px' }, objectFit: 'cover', borderRadius: 2, mb: 4 }}
             />
             
-            <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8 }}>{news.body}</Typography>
+            <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+                {news.body}
+            </Typography>
         </article>
 
         <Divider sx={{ my: 4 }} />
       </Container>
 
-      {/* El modal también lo protegemos o simplemente no se abrirá porque no hay botón */}
+      {/* MODAL CONFIGURADO CORRECTAMENTE 
+      */}
       {role === 'ADMIN' && (
           <NewsModal 
             open={openModal}
             handleClose={() => setOpenModal(false)}
-            onSubmit={handleEdit}
-            initialValues={{
-                title: news.title,
-                author: news.author,
-                image_url: news.image_url,
-                body: news.body
+            
+            initialValues={news} 
+       
+            onSuccess={() => {
+                setOpenModal(false); 
+                loadNews();          
             }}
           />
       )}

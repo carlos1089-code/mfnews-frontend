@@ -3,32 +3,29 @@ import { HomePage } from '../pages/HomePage';
 import { DetailPage } from '../pages/DetailPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
-import { PrivateRoute } from '../components/PrivateRoute'; // <--- 1. IMPORTAR
+import { PrivateRoute } from '../components/PrivateRoute'; 
+
+//! Aca se definen las rutas y es clave entender que
+//! las routas siempre se envouelven con el componente PrivateRouter y esto
+//! es basicamente para que vos no puedas ver las pantallas si no estas logueado
 
 export const AppRouter = () => {
   return (
-    <Routes>
-        {/* --- RUTAS PRIVADAS (Envueltas) --- */}
-        
-        {/* Home solo para logueados */}
+    <Routes>        
         <Route path="/" element={
             <PrivateRoute>
                 <HomePage />
             </PrivateRoute>
         } />
         
-        {/* Detalle solo para logueados */}
         <Route path="/news/:id" element={
             <PrivateRoute>
                 <DetailPage />
             </PrivateRoute>
         } />
 
-        {/* --- RUTAS PÚBLICAS --- */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        
-        {/* Cualquier otra cosa -> Login */}
         <Route path="/*" element={<Navigate to="/login" />} />
     </Routes>
   )

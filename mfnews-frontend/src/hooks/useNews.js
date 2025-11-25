@@ -11,8 +11,6 @@ export const useNews = (searchTerm = '') => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // 2. Enviamos el parámetro 'search' a NestJS
-        // Axios lo convierte automáticamente en: /news?search=valor
         const { data } = await newsApi.get('/news', {
             params: { search: searchTerm }
         });
