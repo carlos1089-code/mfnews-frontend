@@ -13,7 +13,7 @@ export const NewsCard = ({ news }) => {
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* CardActionArea hace que toda la tarjeta sea clickeable */}
-      <CardActionArea onClick={() => navigate(`/news/${news.id}`)}>
+      <CardActionArea onClick={() => navigate(`/news/${news._id}`)}>
         
         {/* Imagen de la noticia */}
         <CardMedia

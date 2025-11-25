@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 
@@ -18,7 +17,7 @@ export const AuthProvider = ({ children }) => {
         return { token, name, role };
       }
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   });
@@ -26,9 +25,6 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  // -----------------------------------------------------------
-  // 2. FUNCIÓN LOGIN (SignIn)
-  // -----------------------------------------------------------
   const signIn = async (email, password) => {
     try {
 
@@ -52,9 +48,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -----------------------------------------------------------
-  // 3. FUNCIÓN REGISTRO (SignUp)
-  // -----------------------------------------------------------
   const signUp = async (name, email, password) => {
     try {
       const response = await axios.post(`${BASE_URL}/auth/register`, { name, email, password });
@@ -81,9 +74,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -----------------------------------------------------------
-  // 4. FUNCIÓN LOGOUT
-  // -----------------------------------------------------------
   const logout = () => {
     // Borramos todo rastro del usuario
     localStorage.removeItem('token');
@@ -101,12 +91,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth debe usarse dentro de un AuthProvider");
   return context;
 };
 
-//! Es muy sencillo este contexto, basciamente te permite crear un contexto dentro del cual
-//! se crear funciones de login, registro y logout, luego cada hijo envuelto en este padre puede
-//! usar esas funciones y el estado del usuario logueado.

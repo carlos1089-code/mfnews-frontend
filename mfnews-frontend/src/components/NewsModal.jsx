@@ -1,91 +1,91 @@
 import { useState } from 'react';
-import { 
-  Dialog, DialogTitle, DialogContent, DialogActions, 
-  Button, TextField, Stack, CircularProgress 
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, TextField, Stack, CircularProgress
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import newsApi from '../api/newsApi'; 
+import newsApi from '../api/newsApi';
 import { toast } from 'sonner';
 
 // Esquema de validación
 const validationSchema = Yup.object().shape({
-    title: Yup.string()
-        .trim()
-        .required('El título es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
-    author: Yup.string()
-        .trim()
-        .required('El autor es obligatorio')
-        .max(50, 'Máximo 50 caracteres'),
-    image_url: Yup.string()
-        .trim()
-        .url('Debe ser una URL válida (http://...)') 
-        .nullable(),
-    body: Yup.string()
-        .trim()
-        .required('El contenido es obligatorio')
-        .min(10, 'Mínimo 10 caracteres')
-        .max(5000, 'Máximo 5000 caracteres'),
+  title: Yup.string()
+    .trim()
+    .required('El título es obligatorio')
+    .max(100, 'Máximo 100 caracteres'),
+  author: Yup.string()
+    .trim()
+    .required('El autor es obligatorio')
+    .max(50, 'Máximo 50 caracteres'),
+  image_url: Yup.string()
+    .trim()
+    .url('Debe ser una URL válida (http://...)')
+    .nullable(),
+  body: Yup.string()
+    .trim()
+    .required('El contenido es obligatorio')
+    .min(10, 'Mínimo 10 caracteres')
+    .max(5000, 'Máximo 5000 caracteres'),
 });
 
 export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
-
   const formik = useFormik({
-    // Si llegan initialValues (edición) los usa, si no, empieza vacío (creación)
-    initialValues: initialValues || { 
-        title: '', 
-        author: '', 
-        image_url: '', 
-        body: '' 
+
+    initialValues: {
+      id: initialValues?.id || null,
+      title: initialValues?.title || '',
+      author: initialValues?.author || '',
+      image_url: initialValues?.image_url || '',
+      body: initialValues?.body || ''
     },
-    enableReinitialize: true, // Importante: permite que el formulario se actualice si cambia la noticia seleccionada
+
+    enableReinitialize: true,
     validationSchema: validationSchema,
-    
+
     onSubmit: async (values, { resetForm }) => {
       setIsLoading(true);
-      
+
       try {
         // 1. Detección Inteligente del ID
         // Buscamos el ID en initialValues (forma correcta) o en values (respaldo) o _id (Mongo)
-        const idToEdit = initialValues?.id || values.id || initialValues?._id;
+        const idToEdit = initialValues?.id;
 
-        console.log("Procesando formulario. ID detectado:", idToEdit); 
+        console.log("Procesando formulario. ID detectado:", idToEdit);
 
         // 2. Limpieza de Datos (Vital para evitar Error 400 en NestJS)
         // Creamos un objeto que SOLO tenga los campos que el DTO del backend espera.
         // Descartamos 'id', 'created_at', 'updated_at', etc.
         const dataToSend = {
-            title: values.title,
-            author: values.author,
-            body: values.body,
-            image_url: values.image_url
+          title: values.title,
+          author: values.author,
+          body: values.body,
+          image_url: values.image_url
         };
 
         if (idToEdit) {
-            // --- MODO EDICIÓN (PATCH) ---
-            await newsApi.patch(`/news/${idToEdit}`, dataToSend);
-            toast.success('¡Noticia actualizada correctamente!');
+          await newsApi.patch(`/news/${idToEdit}`, dataToSend);
+          toast.success('¡Noticia actualizada correctamente!');
         } else {
-            // --- MODO CREACIÓN (POST) ---
-            await newsApi.post('/news', dataToSend);
-            toast.success('¡Noticia creada con éxito!');
+
+          await newsApi.post('/news', dataToSend);
+          toast.success('¡Noticia creada con éxito!');
         }
 
         // 3. Finalización Exitosa
         resetForm();
         handleClose();
-        if (onSuccess) onSuccess(); 
+        if (onSuccess) onSuccess();
 
       } catch (error) {
         console.error('Error al guardar:', error);
-        
+
         const serverMessage = error.response?.data?.message;
         if (serverMessage) {
-            toast.error(Array.isArray(serverMessage) ? serverMessage[0] : serverMessage);
+          toast.error(Array.isArray(serverMessage) ? serverMessage[0] : serverMessage);
         } else {
-            toast.error('Hubo un problema al guardar la noticia.');
+          toast.error('Hubo un problema al guardar la noticia.');
         }
 
       } finally {
@@ -99,11 +99,11 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
       <DialogTitle>
         {initialValues?.id ? 'Editar Noticia' : 'Nueva Noticia'}
       </DialogTitle>
-      
+
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
           <Stack spacing={2}>
-            
+
             {/* TÍTULO */}
             <TextField
               fullWidth id="title" name="title" label="Título"
@@ -143,15 +143,15 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
 
           </Stack>
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={handleClose} color="inherit" disabled={isLoading}>
             Cancelar
           </Button>
-          
-          <Button 
-            type="submit" 
-            variant="contained" 
+
+          <Button
+            type="submit"
+            variant="contained"
             disabled={isLoading}
             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
           >

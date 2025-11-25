@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, Button, CircularProgress, Alert, Divider, Chip, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -22,21 +22,22 @@ export const DetailPage = () => {
   const role = localStorage.getItem('role'); // "ADMIN" o "USER"
 
   // Carga la noticia individual
-  const loadNews = async () => {
-    try {
 
-      const response = await newsApi.get(`/news/${id}`);
-      setNews(response.data);
-    } catch (err) {
-      setError("No se pudo cargar la noticia.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadNews = useCallback(async () => {
+  try {
+    const response = await newsApi.get(`/news/${id}`);
+    console.log("🔍 Noticia cargada:", response.data);
+    setNews(response.data);
+  } catch  {
+    setError("No se pudo cargar la noticia.");
+  } finally {
+    setLoading(false);
+  }
+});
 
   useEffect(() => {
     loadNews();
-  }, [id]);
+  }, [id, loadNews]);
 
   const handleDelete = async () => {
     if (window.confirm('¿Seguro que quieres eliminar esta noticia?')) {
@@ -44,7 +45,7 @@ export const DetailPage = () => {
         await newsApi.delete(`/news/${id}`);
         toast.success("Noticia eliminada"); 
         navigate('/');
-      } catch (err) {
+      } catch  {
         alert("Error: No tienes permiso o falló el servidor");
       }
     }
