@@ -4,10 +4,10 @@ import { Container, Typography, Box, Button, CircularProgress, Alert, Divider, C
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import newsApi from '../api/newsApi';
 import { Navbar } from '../components/Navbar';
 import { NewsModal } from '../components/NewsModal';
 import { toast } from 'sonner'; // Opcional: Si usas sonner para notificaciones
+import { NewsService } from '../api/newsService';
 
 export const DetailPage = () => {
   const { id } = useParams();
@@ -24,16 +24,16 @@ export const DetailPage = () => {
   // Carga la noticia individual
 
   const loadNews = useCallback(async () => {
-  try {
-    const response = await newsApi.get(`/news/${id}`);
-    console.log("🔍 Noticia cargada:", response.data);
-    setNews(response.data);
-  } catch  {
-    setError("No se pudo cargar la noticia.");
-  } finally {
-    setLoading(false);
-  }
-});
+    try {
+      const data = await NewsService.getById(id);
+      console.log("🔍 Noticia cargada:", data);
+      setNews(data);
+    } catch {
+      setError("No se pudo cargar la noticia.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     loadNews();
@@ -42,7 +42,7 @@ export const DetailPage = () => {
   const handleDelete = async () => {
     if (window.confirm('¿Seguro que quieres eliminar esta noticia?')) {
       try {
-        await newsApi.delete(`/news/${id}`);
+        await NewsService.delete(id);
         toast.success("Noticia eliminada"); 
         navigate('/');
       } catch  {

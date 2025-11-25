@@ -13,15 +13,15 @@ newsApi.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
-
-/*
-El inteceptor es clave y hay varios tipos(este es una de respuesta)
-basicamente son funciones que te permiten interceptar y modificar HTTP requests
-o respondes ANTES de que sean manejadas por un then y catch
-
-Es como un middleware :)
-
-*/
+newsApi.interceptors.request.use(
+    config => {
+        console.log("Request made with ", config);
+        return config;
+    },
+    error => {
+        console.error("Error in request:", error);
+        return Promise.reject(error);
+    }
+);
 
 export default newsApi;

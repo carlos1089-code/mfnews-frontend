@@ -5,9 +5,8 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import newsApi from '../api/newsApi';
 import { toast } from 'sonner';
-
+import { NewsService } from '../api/newsService';
 // Esquema de validación
 const validationSchema = Yup.object().shape({
   title: Yup.string()
@@ -48,15 +47,10 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
       setIsLoading(true);
 
       try {
-        // 1. Detección Inteligente del ID
-        // Buscamos el ID en initialValues (forma correcta) o en values (respaldo) o _id (Mongo)
         const idToEdit = initialValues?.id;
 
         console.log("Procesando formulario. ID detectado:", idToEdit);
 
-        // 2. Limpieza de Datos (Vital para evitar Error 400 en NestJS)
-        // Creamos un objeto que SOLO tenga los campos que el DTO del backend espera.
-        // Descartamos 'id', 'created_at', 'updated_at', etc.
         const dataToSend = {
           title: values.title,
           author: values.author,
@@ -65,11 +59,11 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
         };
 
         if (idToEdit) {
-          await newsApi.patch(`/news/${idToEdit}`, dataToSend);
+          await NewsService.update(idToEdit, dataToSend);
           toast.success('¡Noticia actualizada correctamente!');
         } else {
 
-          await newsApi.post('/news', dataToSend);
+          await NewsService.create(dataToSend);
           toast.success('¡Noticia creada con éxito!');
         }
 

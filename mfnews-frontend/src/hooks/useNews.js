@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
-import newsApi from '../api/newsApi';
+// IMPORTAMOS EL SERVICIO
+import { NewsService } from '../api/newsService';
 
-// 1. Recibimos el searchTerm (por defecto vacío)
 export const useNews = (searchTerm = '') => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estado extra para forzar recarga (refetch real)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        const { data } = await newsApi.get('/news', {
-            params: { search: searchTerm }
-        });
-        
+        const data = await NewsService.getAll(searchTerm);        
         setNews(data);
         setError(null);
       } catch (err) {
@@ -26,12 +26,13 @@ export const useNews = (searchTerm = '') => {
     };
 
     fetchNews();
-  }, [searchTerm]); // 3. Se ejecuta cada vez que cambia la búsqueda
+  }, [searchTerm, refreshTrigger]); // Se ejecuta si cambia la búsqueda o el trigger
 
-  // Lógica de separación (Hero / Grid)
+  // Lógica de separación (Hero / Grid) - Se mantiene igual
   const heroNews = news.length > 0 ? news[0] : null;
-  const sideNews = news.length > 0 ? news.slice(1, 4) : [];
-  const gridNews = news.length > 0 ? news.slice(4) : [];
+  // Slice seguro: si hay menos de 1, devuelve array vacío
+  const sideNews = news.slice(1, 4); 
+  const gridNews = news.slice(4);
 
   return { 
     news, 
@@ -40,7 +41,7 @@ export const useNews = (searchTerm = '') => {
     gridNews, 
     loading, 
     error,
-    // Exportamos una función manual por si queremos recargar sin cambiar búsqueda
-    refetch: () => setNews([...news]) 
+    // Refetch real: cambiamos un contador para disparar el useEffect de nuevo
+    refetch: () => setRefreshTrigger(prev => prev + 1)
   };
 };

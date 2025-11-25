@@ -13,13 +13,13 @@ export const NewsCard = ({ news }) => {
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* CardActionArea hace que toda la tarjeta sea clickeable */}
-      <CardActionArea onClick={() => navigate(`/news/${news._id}`)}>
+      <CardActionArea onClick={() => navigate(`/news/${news.id}`)}>
         
         {/* Imagen de la noticia */}
         <CardMedia
           component="img"
           height="200"
-          image={news.image_url || "https://via.placeholder.com/300"} // Fallback por si no hay imagen
+          image={news.image_url || "https://via.placeholder.com/300"} 
           alt={news.title}
         />
 
