@@ -6,18 +6,20 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import LogoutIcon from '@mui/icons-material/Logout';
 
-// Importamos solo el Contexto y el Componente del Modal
-import { useAuth } from '../Context/AuthContext';
-import { NewsModal } from './NewsModal';
+// Importamos el hook y el modal
+import { useAuth } from '../Context/AuthContext.tsx';
+import { NewsModal } from './NewsModal.tsx';
 
 export const Navbar = () => {
   const navigate = useNavigate();
+  
+  // Aquí TS intentará inferir los tipos de useAuth.
+  // Cuando migremos AuthContext, esto tendrá autocompletado automático.
   const { user, logout, isAuthenticated } = useAuth();
   
-  // Estado local SOLO para abrir/cerrar el modal
-  const [openModal, setOpenModal] = useState(false);
+  // Tipado explícito del estado (buena práctica en TS)
+  const [openModal, setOpenModal] = useState<boolean>(false);
 
-  // Lógica para cerrar sesión
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -42,10 +44,10 @@ export const Navbar = () => {
             {/* ZONA DE USUARIO */}
             <Box>
               {isAuthenticated ? (
-                // --- VISTA LOGUEADO ---
                 <Stack direction="row" spacing={2} alignItems="center">
                   
                   {/* Botón Crear (Solo visible si el rol es ADMIN) */}
+                  {/* El operador ?. es vital aquí para que TS no se queje si user es null */}
                   {user?.role === 'ADMIN' && (
                     <Button 
                         variant="contained" 
@@ -61,7 +63,7 @@ export const Navbar = () => {
                     </Button>
                   )}
 
-                  {/* Chip de Usuario (Avatar + Nombre) */}
+                  {/* Chip de Usuario */}
                   <Stack 
                     direction="row" 
                     spacing={1} 
@@ -74,6 +76,7 @@ export const Navbar = () => {
                     }}
                   >
                     <Avatar sx={{ width: 32, height: 32, bgcolor: '#b71c1c', fontSize: 14 }}>
+                        {/* Verificamos que user y user.name existan */}
                         {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </Avatar>
                     <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500 }}>
@@ -89,7 +92,7 @@ export const Navbar = () => {
                   </Tooltip>
                 </Stack>
               ) : (
-                // --- VISTA INVITADO (NO LOGUEADO) ---
+                // --- VISTA INVITADO ---
                 <Stack direction="row" spacing={2}>
                   <Button color="inherit" component={Link} to="/login">
                     Ingresar
@@ -111,20 +114,15 @@ export const Navbar = () => {
         </Container>
       </AppBar>
 
-      {/* MODAL DE CREACIÓN
-          Ahora está limpio. Le pasamos onSuccess para decirle qué hacer 
-          cuando termine de guardar.
-      */}
       {isAuthenticated && user?.role === 'ADMIN' && (
         <NewsModal 
             open={openModal} 
             handleClose={() => setOpenModal(false)} 
-            
-            // Cuando el modal termine de guardar, ejecuta esto:
             onSuccess={() => {
                setOpenModal(false); 
-               window.location.reload(); // Recarga para ver la noticia nueva
+               window.location.reload(); 
             }}
+            initialValues={null} 
         />
       )}
     </>

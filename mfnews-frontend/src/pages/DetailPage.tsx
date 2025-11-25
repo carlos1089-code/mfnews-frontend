@@ -4,27 +4,44 @@ import { Container, Typography, Box, Button, CircularProgress, Alert, Divider, C
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Navbar } from '../components/Navbar';
-import { NewsModal } from '../components/NewsModal';
-import { toast } from 'sonner'; // Opcional: Si usas sonner para notificaciones
-import { NewsService } from '../api/newsService';
+import { Navbar } from '../components/Navbar.tsx';
+import { NewsModal } from '../components/NewsModal.tsx';
+import { toast } from 'sonner';
+import { NewsService } from '../api/newsService.ts';
+// Importamos el tipo News
+// Importamos el tipo News
+import type { News } from '../types/index.ts'; 
+
+// Definimos el tipo de los parámetros de la URL
+interface DetailParams extends Record<string, string | undefined> {
+    id: string; // El ID de la URL siempre es un string
+}
 
 export const DetailPage = () => {
-  const { id } = useParams();
+  // 1. Tipamos useParams: devuelve un objeto con la propiedad 'id' como string
+  const { id } = useParams<DetailParams>(); 
   const navigate = useNavigate();
   
-  const [news, setNews] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  // 2. Tipamos los estados
+  const [news, setNews] = useState<News | null>(null); // Puede ser News o null
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState<boolean>(false);
 
   // LEER EL ROL DEL USUARIO
-  const role = localStorage.getItem('role'); // "ADMIN" o "USER"
+  const role: string | null = localStorage.getItem('role'); // Puede ser string o null
 
   // Carga la noticia individual
-
   const loadNews = useCallback(async () => {
+    // Es vital que el ID exista antes de llamar al servicio
+    if (!id) {
+        setLoading(false);
+        setError("ID de noticia no encontrado.");
+        return;
+    }
+    
     try {
+      // NewsService.getById ya promete devolver News
       const data = await NewsService.getById(id);
       console.log("🔍 Noticia cargada:", data);
       setNews(data);
@@ -40,19 +57,22 @@ export const DetailPage = () => {
   }, [id, loadNews]);
 
   const handleDelete = async () => {
+    if (!id) return; // Validación de ID antes de eliminar
+    
     if (window.confirm('¿Seguro que quieres eliminar esta noticia?')) {
       try {
         await NewsService.delete(id);
         toast.success("Noticia eliminada"); 
         navigate('/');
-      } catch  {
+      } catch (err) {
         alert("Error: No tienes permiso o falló el servidor");
       }
     }
   };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
-  if (error || !news) return <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>;
+  // 3. Verificamos que news exista para seguir renderizando
+  if (error || !news) return <Alert severity="error" sx={{ mt: 4 }}>{error || "Noticia no disponible"}</Alert>;
 
   return (
     <>
@@ -62,7 +82,6 @@ export const DetailPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>Volver</Button>
 
-        
             {role === 'ADMIN' && (
                 <Stack direction="row" spacing={2}>
                     <Button 
@@ -86,6 +105,7 @@ export const DetailPage = () => {
 
         <article>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                {/* 4. TS sabe que news existe aquí */}
                 <Chip label={news.author} color="primary" size="small" />
                 <Typography variant="caption" color="text.secondary">
                     {new Date(news.date || Date.now()).toLocaleDateString()}
@@ -108,15 +128,11 @@ export const DetailPage = () => {
         <Divider sx={{ my: 4 }} />
       </Container>
 
-      {/* MODAL CONFIGURADO CORRECTAMENTE 
-      */}
-      {role === 'ADMIN' && (
+      {role === 'ADMIN' && news && ( // También aseguramos que news exista antes de pasar initialValues
           <NewsModal 
             open={openModal}
             handleClose={() => setOpenModal(false)}
-            
-            initialValues={news} 
-       
+            initialValues={news} // Ahora initialValues es de tipo News (o null si no lo encuentra)
             onSuccess={() => {
                 setOpenModal(false); 
                 loadNews();          

@@ -6,34 +6,43 @@ import {
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
-import { NewsService } from '../api/newsService';
-// Esquema de validación
+import { NewsService } from '../api/newsService.ts';
+
+import { type News,type  CreateNewsDto } from '../types/index.ts';
+
+// 1. Definimos qué props recibe el Modal
+interface NewsModalProps {
+    open: boolean;
+    handleClose: () => void;
+    initialValues?: News | null; // Puede ser una noticia o null/undefined
+    onSuccess?: () => void;
+}
+
+// 2. Definimos la estructura de los valores del formulario
+interface FormValues {
+    id: string | null;
+    title: string;
+    author: string;
+    image_url: string;
+    body: string;
+}
+
+// Esquema de validación (se mantiene igual)
 const validationSchema = Yup.object().shape({
-  title: Yup.string()
-    .trim()
-    .required('El título es obligatorio')
-    .max(100, 'Máximo 100 caracteres'),
-  author: Yup.string()
-    .trim()
-    .required('El autor es obligatorio')
-    .max(50, 'Máximo 50 caracteres'),
-  image_url: Yup.string()
-    .trim()
-    .url('Debe ser una URL válida (http://...)')
-    .nullable(),
-  body: Yup.string()
-    .trim()
-    .required('El contenido es obligatorio')
-    .min(10, 'Mínimo 10 caracteres')
-    .max(5000, 'Máximo 5000 caracteres'),
+  title: Yup.string().trim().required('El título es obligatorio').max(100),
+  author: Yup.string().trim().required('El autor es obligatorio').max(50),
+  image_url: Yup.string().trim().url('URL inválida').nullable(),
+  body: Yup.string().trim().required('El contenido es obligatorio').min(10).max(5000),
 });
 
-export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const formik = useFormik({
+export const NewsModal = ({ open, handleClose, initialValues, onSuccess }: NewsModalProps) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // 3. Tipamos useFormik con la interfaz FormValues
+  const formik = useFormik<FormValues>({
     initialValues: {
-      id: initialValues?.id || null,
+      // Prioridad: _id (Mongo) > id (Genérico) > null
+      id: initialValues?.id || initialValues?.id || null,
       title: initialValues?.title || '',
       author: initialValues?.author || '',
       image_url: initialValues?.image_url || '',
@@ -47,11 +56,13 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
       setIsLoading(true);
 
       try {
-        const idToEdit = initialValues?.id;
+        const idToEdit = values.id; // Tomamos el ID directamente del form state
 
-        console.log("Procesando formulario. ID detectado:", idToEdit);
+        console.log("Procesando formulario. ID:", idToEdit);
 
-        const dataToSend = {
+        // Preparamos el DTO (Data Transfer Object)
+        // Omitimos el ID porque ese va en la URL, no en el cuerpo
+        const dataToSend: CreateNewsDto = {
           title: values.title,
           author: values.author,
           body: values.body,
@@ -59,20 +70,20 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
         };
 
         if (idToEdit) {
+          // Actualizar
           await NewsService.update(idToEdit, dataToSend);
           toast.success('¡Noticia actualizada correctamente!');
         } else {
-
+          // Crear
           await NewsService.create(dataToSend);
           toast.success('¡Noticia creada con éxito!');
         }
 
-        // 3. Finalización Exitosa
         resetForm();
         handleClose();
         if (onSuccess) onSuccess();
 
-      } catch (error) {
+      } catch (error: any) { // Usamos any aquí para poder acceder a response.data libremente
         console.error('Error al guardar:', error);
 
         const serverMessage = error.response?.data?.message;
@@ -91,7 +102,8 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
   return (
     <Dialog open={open} onClose={!isLoading ? handleClose : undefined} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {initialValues?.id ? 'Editar Noticia' : 'Nueva Noticia'}
+        {/* Usamos formik.values.id para decidir el título, es más reactivo */}
+        {formik.values.id ? 'Editar Noticia' : 'Nueva Noticia'}
       </DialogTitle>
 
       <form onSubmit={formik.handleSubmit}>
@@ -103,7 +115,7 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
               fullWidth id="title" name="title" label="Título"
               disabled={isLoading}
               value={formik.values.title} onChange={formik.handleChange}
-              error={formik.touched.title && Boolean(formik.errors.title)}
+              error={Boolean(formik.touched.title && formik.errors.title)}
               helperText={formik.touched.title && formik.errors.title}
             />
 
@@ -112,7 +124,7 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
               fullWidth id="author" name="author" label="Autor"
               disabled={isLoading}
               value={formik.values.author} onChange={formik.handleChange}
-              error={formik.touched.author && Boolean(formik.errors.author)}
+              error={Boolean(formik.touched.author && formik.errors.author)}
               helperText={formik.touched.author && formik.errors.author}
             />
 
@@ -122,7 +134,7 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
               placeholder="https://ejemplo.com/foto.jpg"
               disabled={isLoading}
               value={formik.values.image_url} onChange={formik.handleChange}
-              error={formik.touched.image_url && Boolean(formik.errors.image_url)}
+              error={Boolean(formik.touched.image_url && formik.errors.image_url)}
               helperText={formik.touched.image_url && formik.errors.image_url}
             />
 
@@ -131,7 +143,7 @@ export const NewsModal = ({ open, handleClose, initialValues, onSuccess }) => {
               fullWidth multiline rows={4} id="body" name="body" label="Contenido"
               disabled={isLoading}
               value={formik.values.body} onChange={formik.handleChange}
-              error={formik.touched.body && Boolean(formik.errors.body)}
+              error={Boolean(formik.touched.body && formik.errors.body)}
               helperText={formik.touched.body && formik.errors.body}
             />
 

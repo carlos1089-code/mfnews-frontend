@@ -1,7 +1,13 @@
-// src/layout/AuthLayout.jsx
 import { Container, Box, Typography, Paper } from '@mui/material';
+import {type  ReactNode } from 'react'; // Importamos el tipo para 'children'
 
-export const AuthLayout = ({ children, title }) => {
+// 1. Definimos la interfaz para las props
+interface AuthLayoutProps {
+  children: ReactNode; // El contenido que va dentro del layout
+  title: string;       // El título de la página (e.g., "Login", "Registro")
+}
+
+export const AuthLayout = ({ children, title }: AuthLayoutProps) => {
   return (
     <Container component="main" maxWidth="xs">
       <Box
@@ -23,10 +29,12 @@ export const AuthLayout = ({ children, title }) => {
             gap: 2
           }}
         >
+          {/* Usamos el título tipado */}
           <Typography component="h1" variant="h4" align="center" color="primary" fontWeight="bold" sx={{ mb: 1 }}>
             {title}
           </Typography>
           
+          {/* El contenido hijo */}
           {children}
           
         </Paper>
