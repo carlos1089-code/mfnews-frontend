@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'; // Importamos el tipo para 'children'
 
 // Definimos la interfaz para las props
 interface MainLayoutProps {
-  children: ReactNode; // El contenido que se renderizará dentro del layout (la página actual)
+  children: ReactNode; 
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {

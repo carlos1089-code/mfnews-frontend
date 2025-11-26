@@ -4,7 +4,6 @@ import { NewsService } from '../api/newsService.js';
 import type { News } from '../types/index.js'; 
 
 export const useNews = (searchTerm: string = '') => {
-  // 1. Tipamos el estado: es un Array de News (News[])
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +30,6 @@ export const useNews = (searchTerm: string = '') => {
     fetchNews();
   }, [searchTerm, refreshTrigger]);
 
-  // Lógica de separación
-  // TS infiere que heroNews puede ser 'News' o 'null'
   const heroNews: News | null = news.length > 0 && news[0] !== undefined ? news[0] : null;
   
   // TS infiere que estos son News[]

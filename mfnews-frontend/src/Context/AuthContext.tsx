@@ -1,13 +1,12 @@
 import  React, { createContext, useContext, useState, type ReactNode } from 'react';
 
 
-import { AuthService } from '../api/authService.ts'; // Usamos el servicio, no axios directo
+import { AuthService } from '../api/authService.ts'; 
 
-// 1. Definimos la forma del Usuario en el estado (incluye token)
 interface UserState {
   token: string;
   name: string;
-  role: string; // Podría ser 'ADMIN' | 'USER' si quieres ser más estricto
+  role: string; 
 }
 
 // 2. Definimos qué devuelve el Login/Register para la UI
