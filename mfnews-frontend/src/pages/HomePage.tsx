@@ -182,7 +182,7 @@ export const HomePage = () => {
                 </Typography>
 
                 <Stack spacing={2}>
-                  {sideNews.map((news: News) => (
+                  {sideNews?.map((news: News) => (
                     <Box
                       key={news.id}
                       onClick={() => navigate(`/news/${news.id}`)}
