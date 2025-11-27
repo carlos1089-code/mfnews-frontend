@@ -1,11 +1,4 @@
-import {
-  useState,
-  type JSXElementConstructor,
-  type Key,
-  type ReactElement,
-  type ReactNode,
-  type ReactPortal,
-} from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -16,9 +9,9 @@ import {
   Alert,
   TextField,
   InputAdornment,
+  Grid,
 } from "@mui/material";
 
-import Grid from "@mui/material/Grid";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -31,7 +24,6 @@ import type { News } from "../types/index.ts";
 
 export const HomePage = () => {
   const navigate = useNavigate();
-
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const debouncedSearch = useDebounce(searchTerm, 500);
@@ -41,6 +33,7 @@ export const HomePage = () => {
 
   return (
     <MainLayout>
+      {/* HEADER */}
       <Box
         sx={{
           mb: 4,
@@ -79,12 +72,14 @@ export const HomePage = () => {
         />
       </Box>
 
+      {/* ERROR */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           Hubo un problema cargando las noticias.
         </Alert>
       )}
 
+      {/* NO RESULTS */}
       {!loading && !heroNews && searchTerm && (
         <Box textAlign="center" py={5}>
           <Typography variant="h6" color="text.secondary">
@@ -93,11 +88,14 @@ export const HomePage = () => {
         </Box>
       )}
 
+      {/* CONTENT */}
       {loading ? (
         <NewsSkeleton />
       ) : (
         heroNews && (
           <Grid container spacing={4}>
+            {/* HERO SECTION */}
+            {/* CORREGIDO: Usamos 'size' y quitamos 'item' */}
             <Grid size={{ xs: 12, md: 8 }}>
               <Box
                 sx={{
@@ -166,6 +164,8 @@ export const HomePage = () => {
               </Box>
             </Grid>
 
+            {/* SIDEBAR SECTION */}
+            {/* CORREGIDO: Usamos 'size' y quitamos 'item' */}
             <Grid size={{ xs: 12, md: 4 }}>
               <Paper elevation={0} sx={{ bgcolor: "transparent" }}>
                 <Typography
@@ -180,11 +180,12 @@ export const HomePage = () => {
                 >
                   {searchTerm ? "RESULTADOS" : "TENDENCIAS"}
                 </Typography>
+
                 <Stack spacing={2}>
                   {sideNews.map((news: News) => (
                     <Box
                       key={news.id}
-                      onClick={() => navigate(`/news/${news.id || news.id}`)}
+                      onClick={() => navigate(`/news/${news.id}`)}
                       sx={{ cursor: "pointer", display: "flex", gap: 2 }}
                     >
                       <Box
@@ -216,6 +217,8 @@ export const HomePage = () => {
               </Paper>
             </Grid>
 
+            {/* GRID NEWS SECTION */}
+            {/* CORREGIDO: El contenedor padre usa 'size' */}
             <Grid size={{ xs: 12 }}>
               <Typography
                 variant="h5"
@@ -223,8 +226,10 @@ export const HomePage = () => {
               >
                 Más Noticias
               </Typography>
+
               <Grid container spacing={3}>
                 {gridNews.map((news: News) => (
+                  /* CORREGIDO: Usamos 'size' y quitamos 'item' */
                   <Grid key={news.id} size={{ xs: 12, sm: 6, md: 3 }}>
                     <NewsCard news={news} />
                   </Grid>
