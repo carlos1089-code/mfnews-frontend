@@ -2,10 +2,9 @@
   "compilerOptions": {
     "module": "nodenext",
     "target": "esnext",
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "resolveJsonModule": true,
 
     "allowImportingTsExtensions": true,

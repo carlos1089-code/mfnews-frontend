@@ -1,7 +1,8 @@
 import axios, { type AxiosInstance, AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 // Definimos la URL base
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+
 
 const newsApi: AxiosInstance = axios.create({
     baseURL: BASE_URL
