@@ -1,52 +1,39 @@
-import  React, { createContext, useContext, useState, type ReactNode } from 'react';
-
-
-import { AuthService } from '../api/authService.ts'; 
-
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import { AuthService } from '../api/authService.ts';
 interface UserState {
   token: string;
   name: string;
-  role: string; 
+  role: string;
 }
 
-// 2. Definimos qué devuelve el Login/Register para la UI
 interface AuthResult {
   success: boolean;
   error?: string;
 }
 
-// 3. Definimos qué datos y funciones expone el Contexto
 interface AuthContextType {
   user: UserState | null;
   isAuthenticated: boolean;
-  loadingAuth: boolean; // Agregado para compatibilidad con PrivateRoute
+  loadingAuth: boolean;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (name: string, email: string, password: string) => Promise<AuthResult>;
   logout: () => void;
 }
 
-// Creamos el contexto con valor inicial undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Props del Provider
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [loadingAuth] = useState<boolean>(false);
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  
-  // Estado de carga (útil si validaras token con backend al iniciar)
-  const [loadingAuth] = useState<boolean>(false); 
-
-  // Inicialización Lazy del estado
+  // Inicializar estado leyendo del LocalStorage
   const [user, setUser] = useState<UserState | null>(() => {
     try {
       const token = localStorage.getItem('token');
       const name = localStorage.getItem('name');
       const role = localStorage.getItem('role');
-      
-      if (token && name && role) {
-        return { token, name, role };
+      if (token && name) {
+        // Si hay token, asumimos que está logueado. Si no hay rol, ponemos USER por defecto
+        return { token, name, role: role || 'USER' };
       }
       return null;
     } catch {
@@ -56,70 +43,53 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const isAuthenticated = !!user;
 
-  // --- LOGIN ---
+  // Función auxiliar para guardar datos (DRY - Don't Repeat Yourself)
+  const saveSession = (token: string, userData: any) => {
+    // 1. Guardar en LocalStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('name', userData.name);
+    // IMPORTANTE: Guardamos el rol que viene del backend. Si no viene, default a USER.
+    localStorage.setItem('role', userData.role || 'USER');
+
+    // 2. Actualizar Estado de React
+    setUser({
+      token,
+      name: userData.name,
+      role: userData.role || 'USER',
+    });
+  };
+
   const signIn = async (email: string, password: string): Promise<AuthResult> => {
     try {
-      // Usamos el AuthService que ya creamos
       const data = await AuthService.login({ email, password });
       
-      // data.user y data.token vienen de la respuesta del servicio
-      const { user: apiUser, token } = data; 
-
-      // Guardamos en LocalStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('name', apiUser.name);
-      localStorage.setItem('role', apiUser.role);
-
-      // Actualizamos estado
-      setUser({ 
-        name: apiUser.name, 
-        role: apiUser.role, 
-        token 
-      });
-
-      return { success: true }; 
-
+      // AQUI ESTA LA CLAVE: El backend ahora devuelve 'token' y 'user.role'
+      if (data.token && data.user) {
+        saveSession(data.token, data.user);
+        return { success: true };
+      }
+      return { success: false, error: "Respuesta del servidor incompleta" };
     } catch (error: any) {
-      console.error("Login Error:", error);
-      return { 
-        success: false, 
-        // Intentamos leer el mensaje de error del backend
-        error: error.response?.data?.message || 'Credenciales inválidas' 
-      };
+      return { success: false, error: error.response?.data?.message || 'Error al iniciar sesión' };
     }
   };
 
-  // --- REGISTRO ---
   const signUp = async (name: string, email: string, password: string): Promise<AuthResult> => {
     try {
       const data = await AuthService.register({ name, email, password });
 
+      // AQUI ESTA LA CLAVE: Ahora el registro TAMBIÉN devuelve token y rol
       if (data.token && data.user) {
-        const { token, user: apiUser } = data;
-        
-        localStorage.setItem('token', token);
-        localStorage.setItem('name', apiUser.name);
-        localStorage.setItem('role', apiUser.role);
-
-        setUser({ 
-            name: apiUser.name, 
-            role: apiUser.role, 
-            token 
-        });
+        saveSession(data.token, data.user);
+        return { success: true };
       }
-
-      return { success: true }; 
-
+      
+      return { success: false, error: "No se recibió el token de auto-ingreso" };
     } catch (error: any) {
-      console.error("Register Error:", error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al crear la cuenta.' 
-      };
+      return { success: false, error: error.response?.data?.message || 'Error al registrarse' };
     }
   };
 
-  // --- LOGOUT ---
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
@@ -128,22 +98,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-        user, 
-        isAuthenticated, 
-        signIn, 
-        signUp, 
-        logout,
-        loadingAuth // Importante pasarlo
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loadingAuth, signIn, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook personalizado
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth debe usarse dentro de un AuthProvider");
+  if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider");
   return context;
 };
