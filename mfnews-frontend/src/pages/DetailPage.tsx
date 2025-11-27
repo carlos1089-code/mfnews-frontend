@@ -22,10 +22,9 @@ import { toast } from "sonner";
 
 // Servicios y Hooks
 import { NewsService } from "../api/newsService.ts";
-import { useAuth } from "../Context/AuthContext.tsx"; // <--- IMPORTANTE: Usamos el contexto
+import { useAuth } from "../Context/AuthContext.tsx";
 import type { News } from "../types/index.ts";
 
-// Definimos el tipo de los parámetros de la URL
 interface DetailParams extends Record<string, string | undefined> {
   id: string;
 }
@@ -34,19 +33,15 @@ export const DetailPage = () => {
   const { id } = useParams<DetailParams>();
   const navigate = useNavigate();
 
-  // 1. Usamos el Hook de Autenticación para obtener el usuario actual de forma reactiva
   const { user } = useAuth();
 
-  // 2. Calculamos si es admin (seguro contra nulos)
   const isAdmin = user?.role === "ADMIN";
 
-  // Estados locales
   const [news, setNews] = useState<News | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
 
-  // Carga la noticia individual
   const loadNews = useCallback(async () => {
     if (!id) {
       setLoading(false);
@@ -84,7 +79,6 @@ export const DetailPage = () => {
     }
   };
 
-  // Renderizado condicional de estados de carga/error
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
@@ -116,7 +110,6 @@ export const DetailPage = () => {
       <Navbar />
 
       <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
-        {/* Cabecera con botones de acción */}
         <Box
           sx={{
             display: "flex",
@@ -129,7 +122,6 @@ export const DetailPage = () => {
             Volver
           </Button>
 
-          {/* Renderizado Condicional: Solo si isAdmin es true */}
           {isAdmin && (
             <Stack direction="row" spacing={2}>
               <Button
@@ -151,7 +143,6 @@ export const DetailPage = () => {
           )}
         </Box>
 
-        {/* Contenido de la Noticia */}
         <article>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
             <Chip label={news.author} color="primary" size="small" />
@@ -197,7 +188,6 @@ export const DetailPage = () => {
         <Divider sx={{ my: 4 }} />
       </Container>
 
-      {/* Modal de Edición: Solo se renderiza si es Admin y la noticia existe */}
       {isAdmin && news && (
         <NewsModal
           open={openModal}
@@ -205,7 +195,7 @@ export const DetailPage = () => {
           initialValues={news}
           onSuccess={() => {
             setOpenModal(false);
-            loadNews(); // Recargamos para ver los cambios
+            loadNews();
             toast.success("Noticia actualizada");
           }}
         />

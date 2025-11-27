@@ -8,14 +8,12 @@ export const useNews = (searchTerm: string = '') => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Estado para refrescar
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // NewsService.getAll ya promete devolver News[], así que data se infiere solo
         const data = await NewsService.getAll(searchTerm);        
         setNews(data);
         setError(null);
@@ -32,7 +30,6 @@ export const useNews = (searchTerm: string = '') => {
 
   const heroNews: News | null = news.length > 0 && news[0] !== undefined ? news[0] : null;
   
-  // TS infiere que estos son News[]
   const sideNews: News[] = news.slice(1, 4); 
   const gridNews: News[] = news.slice(4);
 

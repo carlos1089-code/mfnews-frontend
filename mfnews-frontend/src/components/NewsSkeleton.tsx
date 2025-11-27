@@ -3,7 +3,6 @@ import { Grid as Grid, Skeleton, Box } from '@mui/material';
 
 export const NewsSkeleton = () => {
   return (
-    // 'container' sigue existiendo para el padre
     <Grid container spacing={3}>
       {[1, 2, 3, 4, 5, 6].map((item) => (
         <Grid key={item} size={{ xs: 12, sm: 6, md: 4 }}>

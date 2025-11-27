@@ -1,20 +1,20 @@
 import axios, { type AxiosInstance, AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-// Definimos la URL base
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL 
 
 
 const newsApi: AxiosInstance = axios.create({
     baseURL: BASE_URL
 });
 
-// Interceptor de REQUEST - AGREGAMOS EL TOKEN AQUÍ 👇
+
 newsApi.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // 🔑 Obtener el token del localStorage
+       
         const token = localStorage.getItem('token');
         
-        // Si existe el token, agregarlo a los headers
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -33,7 +33,7 @@ newsApi.interceptors.request.use(
     }
 );
 
-// Interceptor de RESPONSE
+
 newsApi.interceptors.response.use(
     (response) => {
         console.log("✅ Response received:", response.status);
@@ -42,9 +42,7 @@ newsApi.interceptors.response.use(
     (error: AxiosError) => {
         if (error.response?.status === 401) {
             console.error("🚫 Error 401: Token inválido o expirado");
-            // Opcional: redirigir al login
-            // localStorage.removeItem('token');
-            // window.location.href = '/login';
+     
         }
         console.error("❌ Error en la API:", error.response?.data || error.message);
         return Promise.reject(error);

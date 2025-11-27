@@ -1,14 +1,13 @@
-// src/theme/AppTheme.js
 import { createTheme } from '@mui/material/styles';
 
 export const appTheme = createTheme({
   palette: {
     primary: {
-      main: '#D32F2F', // Tu rojo corporativo
+      main: '#D32F2F', 
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f4f4f4', // El gris que usabas en HomePage
+      default: '#f4f4f4', 
       paper: '#ffffff',
     },
     text: {
@@ -16,12 +15,12 @@ export const appTheme = createTheme({
     }
   },
   components: {
-    // Podemos definir estilos por defecto para componentes aquí
+
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8, // Bordes un poco más redondeados para todo
-          textTransform: 'none', // Quitar mayúsculas forzadas si quieres
+          borderRadius: 8,
+          textTransform: 'none', 
           fontWeight: 'bold',
         },
       },
@@ -29,8 +28,8 @@ export const appTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12, // Cards más modernas
-          boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', // Sombra suave global
+          borderRadius: 12, 
+          boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', 
         },
       },
     },
