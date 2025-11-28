@@ -79,26 +79,5 @@ npm run dev
 La aplicación estará disponible en `http://localhost:5173`
 
 ---
-
-## 🐳 Docker Support
-
-El proyecto incluye configuración para despliegue en contenedores.
-
-### Construir la imagen
-```bash
-docker build -t mfnews-frontend .
-```
-
-### Correr el contenedor
-```bash
-docker run -p 5173:5173 mfnews-frontend
-```
-
 ---
 
-## 📜 Scripts Disponibles
-
-* `npm run dev`: Inicia el servidor de desarrollo.
-* `npm run build`: Compila la aplicación para producción.
-* `npm run preview`: Vista previa local de la build de producción.
-* `npm run lint`: Ejecuta el linter para encontrar errores de código.
