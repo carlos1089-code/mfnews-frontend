@@ -4,8 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 
-// --- CORRECCIÓN AQUÍ ---
-// Antes tenías VITE_API_BASE_URL, pero en tu .env se llama VITE_API_URL
+
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const newsApi: AxiosInstance = axios.create({

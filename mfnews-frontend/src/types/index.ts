@@ -29,6 +29,19 @@ export interface News {
 
 export type CreateNewsDto = Omit<News, "id" | "_id" | "date">;
 
+// Credentials para login
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+// Datos para registro
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: {
