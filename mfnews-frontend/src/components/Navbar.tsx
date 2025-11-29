@@ -132,7 +132,8 @@ export const Navbar = () => {
           handleClose={() => setOpenModal(false)}
           onSuccess={() => {
             setOpenModal(false);
-            window.location.reload();
+            // Refresca la página usando React Router (sin perder el estado de React)
+            navigate(0);
           }}
           initialValues={null}
         />

@@ -52,7 +52,7 @@ export const NewsModal = ({
 
   const formik = useFormik<FormValues>({
     initialValues: {
-      id: initialValues?.id || initialValues?.id || null,
+      id: initialValues?.id || null,
       title: initialValues?.title || "",
       author: initialValues?.author || "",
       image_url: initialValues?.image_url || "",
@@ -89,10 +89,10 @@ export const NewsModal = ({
         resetForm();
         handleClose();
         if (onSuccess) onSuccess();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error al guardar:", error);
 
-        const serverMessage = error.response?.data?.message;
+        const serverMessage = (error as any)?.response?.data?.message;
         if (serverMessage) {
           toast.error(
             Array.isArray(serverMessage) ? serverMessage[0] : serverMessage

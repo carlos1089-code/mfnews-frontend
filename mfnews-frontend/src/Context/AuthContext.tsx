@@ -6,7 +6,7 @@ import React, {
 } from "react";
 import { AuthService } from "../api/authService.ts";
 
-import type { AuthResult, UserSession } from "../types/index.ts";
+import type { AuthResult, UserSession, User } from "../types/index.ts";
 
 
 interface AuthContextType {
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = !!user;
 
-  const saveSession = (token: string, userData: any) => {
+  const saveSession = (token: string, userData: User) => {
 
     localStorage.setItem("token", token);
     localStorage.setItem("name", userData.name);
@@ -78,11 +78,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: true };
       }
       return { success: false, error: "Respuesta del servidor incompleta" };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login Error:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : (error as any)?.response?.data?.message || "Error al iniciar sesión";
       return {
         success: false,
-        error: error.response?.data?.message || "Error al iniciar sesión",
+        error: errorMessage,
       };
     }
   };
@@ -105,11 +108,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         success: false,
         error: "No se recibió el token de auto-ingreso",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Register Error:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : (error as any)?.response?.data?.message || "Error al registrarse";
       return {
         success: false,
-        error: error.response?.data?.message || "Error al registrarse",
+        error: errorMessage,
       };
     }
   };
