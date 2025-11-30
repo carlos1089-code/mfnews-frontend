@@ -4,19 +4,20 @@
     "target": "esnext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "vite/client"],
+    "types": [
+      "node",
+      "vite/client",
+      "jest",
+      "@testing-library/jest-dom"
+    ],
     "resolveJsonModule": true,
-
     "allowImportingTsExtensions": true,
     "noEmit": true,
-
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
     "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
@@ -24,5 +25,11 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
