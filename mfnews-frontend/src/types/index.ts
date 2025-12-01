@@ -21,6 +21,7 @@ export interface AuthResult {
 export interface News {
   id?: string;
   title: string;
+  subtitle?: string;
   author: string;
   body: string;
   image_url?: string;

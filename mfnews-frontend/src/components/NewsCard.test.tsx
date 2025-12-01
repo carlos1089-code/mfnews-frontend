@@ -20,6 +20,7 @@ const renderWithRouter = (component: React.ReactElement) => {
 const mockNews: News = {
     id: '123',
     title: 'Noticia de Prueba',
+    subtitle: 'Subtítulo de prueba',
     author: 'Carlos Test',
     body: 'Este es el contenido de la noticia de prueba que debe ser truncado si es muy largo para verificar que la función truncate funciona correctamente.',
     image_url: 'https://example.com/image.jpg',
@@ -39,6 +40,9 @@ describe('NewsCard', () => {
 
         // Verificar que se muestra el autor
         expect(screen.getByText('Carlos Test')).toBeInTheDocument();
+
+        // Verificar que se muestra el subtítulo
+        expect(screen.getByText('Subtítulo de prueba')).toBeInTheDocument();
 
         // Verificar que se muestra la fecha formateada
         const formattedDate = new Date('2024-01-15').toLocaleDateString();

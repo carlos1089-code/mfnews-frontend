@@ -70,6 +70,7 @@ describe('NewsModal', () => {
 
             // Llenar el formulario
             await user.type(screen.getByLabelText('Título'), 'Nueva Noticia Test');
+            await user.type(screen.getByLabelText(/Subtítulo/i), 'Mi subtítulo');
             await user.type(screen.getByLabelText('Autor'), 'Carlos');
             await user.type(screen.getByLabelText('URL de Imagen'), 'https://example.com/img.jpg');
             await user.type(screen.getByLabelText('Contenido'), 'Este es el contenido de la noticia de prueba');
@@ -118,6 +119,7 @@ describe('NewsModal', () => {
         const mockExistingNews: News = {
             id: '456',
             title: 'Noticia Existente',
+            subtitle: 'Un subtítulo de ejemplo',
             author: 'Autor Original',
             body: 'Contenido original de la noticia',
             image_url: 'https://example.com/original.jpg',

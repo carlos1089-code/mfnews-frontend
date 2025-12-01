@@ -163,6 +163,16 @@ export const DetailPage = () => {
             {news.title}
           </Typography>
 
+          {news.subtitle && (
+            <Typography
+              variant="h5"
+              color="text.secondary"
+              sx={{ mb: 3, fontStyle: "italic" }}
+            >
+              {news.subtitle}
+            </Typography>
+          )}
+
           <Box
             component="img"
             src={news.image_url || "https://via.placeholder.com/800"}
