@@ -3,11 +3,11 @@ import { createTheme } from '@mui/material/styles';
 export const appTheme = createTheme({
   palette: {
     primary: {
-      main: '#D32F2F', 
+      main: '#D32F2F',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f4f4f4', 
+      default: '#f3ede3',
       paper: '#ffffff',
     },
     text: {
@@ -20,7 +20,7 @@ export const appTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          textTransform: 'none', 
+          textTransform: 'none',
           fontWeight: 'bold',
         },
       },
@@ -28,8 +28,8 @@ export const appTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12, 
-          boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', 
+          borderRadius: 12,
+          boxShadow: '0px 4px 20px rgba(0,0,0,0.05)',
         },
       },
     },
