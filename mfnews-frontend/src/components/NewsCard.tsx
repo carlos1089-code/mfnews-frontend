@@ -58,6 +58,16 @@ export const NewsCard = ({ news }: NewsCardProps) => {
             {news.title}
           </Typography>
 
+          {news.subtitle && (
+            <Typography
+              variant="subtitle1"
+              color="text.secondary"
+              sx={{ mb: 1.5, fontStyle: "italic" }}
+            >
+              {news.subtitle}
+            </Typography>
+          )}
+
           <Typography variant="body2" color="text.secondary">
             {truncate(news.body, 100)}
           </Typography>

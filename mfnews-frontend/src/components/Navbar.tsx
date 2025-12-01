@@ -31,7 +31,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <AppBar position="static" color="primary" elevation={0}>
+      <AppBar position="sticky" color="primary" elevation={0}>
         <Container maxWidth="lg">
           <Toolbar disableGutters>
             <Typography

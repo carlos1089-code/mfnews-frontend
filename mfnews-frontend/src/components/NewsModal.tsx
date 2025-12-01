@@ -26,6 +26,7 @@ interface NewsModalProps {
 interface FormValues {
   id: string | null;
   title: string;
+  subtitle: string;
   author: string;
   image_url: string;
   body: string;
@@ -33,6 +34,7 @@ interface FormValues {
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().trim().required("El título es obligatorio").max(100),
+  subtitle: Yup.string().trim().max(200, "El subtítulo no puede exceder 200 caracteres"),
   author: Yup.string().trim().required("El autor es obligatorio").max(50),
   image_url: Yup.string().trim().url("URL inválida").nullable(),
   body: Yup.string()
@@ -54,6 +56,7 @@ export const NewsModal = ({
     initialValues: {
       id: initialValues?.id || null,
       title: initialValues?.title || "",
+      subtitle: initialValues?.subtitle || "",
       author: initialValues?.author || "",
       image_url: initialValues?.image_url || "",
       body: initialValues?.body || "",
@@ -72,6 +75,7 @@ export const NewsModal = ({
 
         const dataToSend: CreateNewsDto = {
           title: values.title,
+          ...(values.subtitle && { subtitle: values.subtitle }),
           author: values.author,
           body: values.body,
           image_url: values.image_url,
@@ -130,6 +134,19 @@ export const NewsModal = ({
               onChange={formik.handleChange}
               error={Boolean(formik.touched.title && formik.errors.title)}
               helperText={formik.touched.title && formik.errors.title}
+            />
+
+            <TextField
+              fullWidth
+              id="subtitle"
+              name="subtitle"
+              label="Subtítulo (opcional)"
+              placeholder="Breve resumen o tagline de la noticia"
+              disabled={isLoading}
+              value={formik.values.subtitle}
+              onChange={formik.handleChange}
+              error={Boolean(formik.touched.subtitle && formik.errors.subtitle)}
+              helperText={formik.touched.subtitle && formik.errors.subtitle}
             />
 
             <TextField
