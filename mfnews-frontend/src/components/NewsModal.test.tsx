@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import { NewsModal } from './NewsModal.tsx';
 import { NewsService } from '../api/newsService.ts';
 import type { News } from '../types/index.ts';
